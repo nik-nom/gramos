@@ -1,0 +1,45 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import {referenceServices,referenceSteps,referenceForms,referenceLinks,mergeReferenceRows} from '../src/services-reference.js';
+import {renderServicesPage} from '../src/services.js';
+
+globalThis.location={pathname:'/demo/services',search:'',origin:'http://localhost:8000',href:'http://localhost:8000/demo/services'};
+assert.equal(referenceServices.length,7);
+assert.equal(referenceSteps.length,3);
+assert.equal(referenceForms.length,3);
+assert.equal(referenceLinks.length,10);
+const villageA={id:'village-a',slug:'village-a',site_settings:{}};
+const villageB={id:'village-b',slug:'village-b',site_settings:{}};
+const preview=renderServicesPage(villageA,[],'mr');
+assert.equal((preview.match(/class="sv-l-service"/g)||[]).length,14,'All and Available each show 7 village template cards');
+assert(preview.includes('जन्म नोंदणी व प्रमाणपत्र')&&preview.includes('थकबाकी नसल्याचे प्रमाणपत्र'));
+assert(preview.includes('अर्ज प्रक्रिया')&&preview.includes('नागरिक सेवा लिंक'));
+assert(preview.includes('कर भरणा QR Code')&&preview.includes('services-panel-qr'));
+assert(!preview.includes('<img class="sv-l-qr"'), 'No fake tax payment QR image');
+assert(preview.includes('या गावासाठी कर भरणा QR Code अद्याप जोडलेला नाही.'));
+assert(preview.includes('aaplesarkar.mahaonline.gov.in'));
+const originalHashes={1:'cba6640a350335b8142739d579702955a376130246f636c7f75705ef9e94c428',2:'8adfa3d3c630b6e4e1018b86decb0760c856dab1b1d1754309aeadbcbebccea1',3:'cf0d28d2197679df4a12a45261db06a14380ace1179c39a8a637545578b22af7'};
+for(const [i,pages] of [[1,7],[2,1],[3,12]]){
+ const bundled=await readFile(new URL(`../assets/forms/V_Swaraj_Gramsoft_Form_${i}.pdf`,import.meta.url));
+ assert.equal(createHash('sha256').update(bundled).digest('hex'),originalHashes[i],`PDF ${i} must be unchanged`);
+ assert(bundled.subarray(0,5).toString()==='%PDF-');
+ assert(preview.includes(`/assets/forms/V_Swaraj_Gramsoft_Form_${i}.pdf`));
+}
+const record={kind:'services',slug:'birth-certificate',status:'published',sort_order:0,title_mr:'दुरुस्त केलेली माहिती',title_en:'Edited title',body_mr:'फक्त गाव अ'};
+const villageAHtml=renderServicesPage(villageA,[record],'mr');
+const villageBHtml=renderServicesPage(villageB,[],'mr');
+assert(villageAHtml.includes('दुरुस्त केलेली माहिती'));
+assert(!villageAHtml.includes('जन्म नोंदणी व प्रमाणपत्र'));
+assert(villageBHtml.includes('जन्म नोंदणी व प्रमाणपत्र')&&!villageBHtml.includes('दुरुस्त केलेली माहिती'));
+const draft={...record,status:'draft',title_mr:'मसुदा शीर्षक'};
+assert(!renderServicesPage(villageA,[draft],'mr').includes('मसुदा शीर्षक'),'Draft excluded from public');
+assert(renderServicesPage(villageA,[draft],'mr',true).includes('मसुदा शीर्षक'),'Draft visible in authorized preview');
+const withQR=renderServicesPage({...villageB,site_settings:{services_payment_qr_url:'https://example.org/village-b.png'}},[],'mr');
+assert(withQR.includes('src="https://example.org/village-b.png"'));
+const rejected=renderServicesPage({...villageB,site_settings:{services_payment_qr_url:'javascript:alert(1)'}},[],'mr');
+assert(!rejected.includes('<img class="sv-l-qr"'));
+const customForm={kind:'service_forms',slug:'marriage-registration',status:'published',title_mr:'नवीन अर्ज',title_en:'Custom form',external_url:'',sort_order:2};
+assert.equal(mergeReferenceRows([customForm],'service_forms').find(x=>x.slug==='marriage-registration')?.external_url,referenceForms[2].external_url,'Default PDF remains when custom record has no replacement');
+assert.equal(mergeReferenceRows([], 'services').length,7);
+console.log('PASS v4.5: screenshot template, three original PDFs, QR guard, two-village isolation, published/draft states');

@@ -1,0 +1,16 @@
+import {readFileSync} from 'node:fs';
+import assert from 'node:assert/strict';
+import {getDemo} from '../src/demo.js';
+import {homeFooter,homeBottomLogo} from '../src/homepage.js';
+const css=readFileSync(new URL('../styles.css',import.meta.url),'utf8');
+globalThis.location={origin:'https://gramos.example'};
+const village=getDemo().village;
+village.site_settings={...(village.site_settings||{}),footer_logo_url:'https://assets.example.org/logo.png'};
+const logo=homeBottomLogo(village,'mr');const footer=homeFooter(village,'mr');
+assert.match(css,/\.sv-page-logo-inner\{display:flex;flex-direction:column;align-items:center;/);
+assert.match(logo,/sv-page-logo-band/);
+assert.match(logo,/sv-page-logo/);
+assert.match(logo,/assets\.example\.org\/logo\.png/);
+assert.doesNotMatch(footer,/sv-page-logo|sv-footer-bottom-brand/);
+assert.match(footer,/sv-copyright/);
+console.log('PASS v3.7 compatibility: logo retains centered layout, but now belongs to the content before footer.');

@@ -1,0 +1,13 @@
+import {renderAboutPage} from '../src/about.js';
+import {buildShamvadiVillage} from '../src/templates.js';
+import {readFile,writeFile,mkdir} from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
+import path from 'node:path';
+globalThis.location={search:'?tab=duties'};
+const root=path.resolve(fileURLToPath(import.meta.url),'../..');
+const v={...buildShamvadiVillage({slug:'new-village',name_mr:'नवीन गाव',name_en:'New Village'}),id:'00000000-0000-4000-8000-000000000001'};
+const css=await readFile(path.join(root,'styles.css'),'utf8');
+const html=`<!doctype html><html lang="mr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style></head><body><div id="app"><div class="sv-site">${renderAboutPage(v,[],'mr')}</div></div></body></html>`;
+await mkdir(path.join(root,'qa'),{recursive:true});
+await writeFile(path.join(root,'qa','v44-fixed-about-duties.html'),html);
+console.log('Generated QA static preview: qa/v44-fixed-about-duties.html');

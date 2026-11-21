@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {getDemo} from '../src/demo.js';
+import {renderShamvadiHomepage} from '../src/homepage.js';
+const css=readFileSync(new URL('../styles.css',import.meta.url),'utf8');
+const {village,items}=getDemo();
+const html=renderShamvadiHomepage(village,items,'mr',false);
+assert(html.includes('sv-service-column')&&html.includes('sv-video-content'));
+assert(css.includes('GramOS v2.4'));
+for(const fragment of ['grid-area:1 / 2 / 3 / 3','grid-area:2 / 1 / 3 / 2','display:contents','@media (min-width:941px)'])assert(css.includes(fragment));
+console.log('PASS v2.4: Lokseva card rows and video panel share a non-overlapping CSS grid');

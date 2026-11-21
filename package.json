@@ -1,0 +1,12 @@
+{
+  "name": "gramos-shamvadi",
+  "version": "4.7.0",
+  "private": true,
+  "type": "module",
+  "description": "GramOS 4.7 — screenshot-style village navbar, customizable logo and four-column footer",
+  "scripts": {
+    "dev": "node server.mjs",
+    "start": "node server.mjs",
+    "test": "node tests/smoke.mjs && node tests/admin-smoke.mjs && node tests/home-data.mjs && node tests/v4-data-contract.mjs && node tests/v5-about-animation.mjs && node tests/v5-admin-contract.mjs && node tests/v6-websites-auth.mjs && node tests/reference-layout-v7.mjs && node tests/v8-brand-compression.mjs && node tests/v9-about-tabs-editor.mjs && node tests/v9-admin-payload.mjs && node tests/v10-reference-about.mjs && node tests/v10-admin-elements.mjs && node tests/v11-about-clean.mjs && node tests/v22-parity-and-layout.mjs && node tests/v23-layout-parity.mjs && node tests/v24-service-video-alignment.mjs && node tests/v25-announcement-alignment.mjs && node tests/v26_lokseva_home_tab.mjs && node tests/v27-projects-pdf.mjs && node tests/v27-admin-persistence-upload.mjs && node tests/v28-schemes-page.mjs && node tests/v29-notice-board.mjs && node tests/v30-news-gallery.mjs && node tests/v31-contact-news-footer.mjs && node tests/v31-admin-persistence.mjs && node tests/v32-seo-multi-village.mjs && node tests/v33-dynamic-sitemap.mjs && node tests/v34-security-and-workflow.mjs && node tests/v35-beneficiaries-logo-excel.mjs && node tests/v36-yojana-footer-logo.mjs && node tests/v37-footer-center.mjs && node tests/v38-logo-footer-language-pdf.mjs && node tests/v39-footer-db-live-contract.mjs && node tests/v40-admin-pages.mjs && node tests/v41-fixed-branding-workspace.mjs && node tests/v43-village-branding-admin.mjs && node tests/v44-fixed-about-reference.mjs && node tests/v45-lokseva-reference-forms.mjs && node tests/v46-schemes-notices-reference.mjs && node tests/v47-vswaraj-navbar-footer.mjs"
+  }
+}
