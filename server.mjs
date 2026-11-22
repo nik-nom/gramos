@@ -31,7 +31,7 @@ const server=createServer(async(req,res)=>{
    req.query=Object.fromEntries(u.searchParams.entries());
    return handler(req,res);
   }
-  if(pathname==='/api/submit'||pathname==='/api/attachment'||pathname==='/api/beneficiary-file'){
+  if(pathname==='/api/submit'||pathname==='/api/attachment'||pathname==='/api/beneficiary-file'||pathname==='/api/domain-admin'){
    const name=pathname.slice('/api/'.length);
    const {default:handler}=await import(`file://${path.join(apiDir,name+'.js')}`);
    let body='';
