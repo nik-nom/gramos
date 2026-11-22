@@ -12,11 +12,11 @@ assert.equal(web2.home_sections.length,6,'One village must not share a mutable c
 assert.throws(()=>buildShamvadiVillage({slug:'../hack',name_en:'X'}),/slug/);
 assert.throws(()=>buildShamvadiVillage({slug:'safe'}),/village name/);
 // Offline mock for login, permissions and insert payload (does not contact Supabase).
-let payloads=[], creds=[], signedIn=true;
+let payloads=[], creds=[], signedIn=true, recoveryEmails=[], passwords=[];
 const query=(data)=>({eq(){return this},order(){return this},maybeSingle:async()=>({data:data?.[0]||null,error:null}),single:async()=>({data:data?.[0]||null,error:null}),then(yes,no){return Promise.resolve({data,error:null}).then(yes,no)}});
 const api={
  rpc(name,args){payloads.push({rpc:name,args});return query(['created-village-id']);},
- auth:{signInWithPassword:async x=>{creds.push(x);return signedIn?{error:null}:{error:{message:'Invalid login credentials'}}}},
+ auth:{signInWithPassword:async x=>{creds.push(x);return signedIn?{error:null}:{error:{message:'Invalid login credentials'}}}, resetPasswordForEmail:async (email,options)=>{recoveryEmails.push({email,options});return {error:null}}, updateUser:async data=>{passwords.push(data);return {error:null}}},
  from(table){return {
   select(){return query([{id:'created-village-id',slug:'shamvadi',status:'draft',site_settings:{template_key:'shamvadi-blue'}}])},
   in(){return query([])},
@@ -32,16 +32,27 @@ class FakeFormData{constructor(f){this.f=f.fields}get(k){return this.f[k]??''}}
 globalThis.FormData=FakeFormData;
 const {submitAdminForm,renderAdmin}=await import('../src/admin.js');
 const anonymousLogin=await renderAdmin(['admin','login'],'en',{admin:false,ids:[]},null);
-assert(anonymousLogin.includes('There is no default password'));
-assert(anonymousLogin.includes('Create new user'));
+assert(anonymousLogin.includes('There is no default admin password'));
+assert(anonymousLogin.includes('Forgot password?'));
 let redirected='';
 await submitAdminForm({id:'loginForm',fields:{email:' admin@example.test ',password:' space-sensitive ' }},[],{admin:false,ids:[]},url=>redirected=url,()=>{});
 assert.equal(creds[0].password,' space-sensitive ');
 assert.equal(creds[0].email,'admin@example.test');
 assert.equal(redirected,'/admin');
 signedIn=false;
-await assert.rejects(()=>submitAdminForm({id:'loginForm',fields:{email:'abc@example.test',password:'wrong'}},[],{admin:false,ids:[]},()=>{},()=>{}),/no default account or password/);
+await assert.rejects(()=>submitAdminForm({id:'loginForm',fields:{email:'abc@example.test',password:'wrong'}},[],{admin:false,ids:[]},()=>{},()=>{}),/Forgot password/);
 signedIn=true;
+const recoverPage=await renderAdmin(['admin','recover'],'en',{admin:false,ids:[]},null);
+assert(recoverPage.includes('recoverPasswordForm'));
+await submitAdminForm({id:'recoverPasswordForm',fields:{email:' admin@example.test '},reset(){}},[],{admin:false,ids:[]},()=>{},()=>{});
+assert.equal(recoveryEmails[0].email,'admin@example.test');
+assert(recoveryEmails[0].options.redirectTo.endsWith('/admin/security'));
+const securityPage=await renderAdmin(['admin','security'],'en',{admin:true,ids:[]},{email:'admin@example.test'});
+assert(securityPage.includes('setPasswordForm'));
+await assert.rejects(()=>submitAdminForm({id:'setPasswordForm',fields:{password:'123',confirm_password:'123'}},[],{admin:true,ids:[]},()=>{},()=>{}),/14 and 128/);
+await assert.rejects(()=>submitAdminForm({id:'setPasswordForm',fields:{password:'new-pass-word-123456',confirm_password:'different'}},[],{admin:true,ids:[]},()=>{},()=>{}),/do not match/);
+await submitAdminForm({id:'setPasswordForm',fields:{password:'new-pass-word-123456',confirm_password:'new-pass-word-123456'},reset(){}},[],{admin:true,ids:[]},()=>{},()=>{});
+assert.equal(passwords.at(-1).password,'new-pass-word-123456');
 await assert.rejects(()=>submitAdminForm({id:'createVillageForm',fields:{slug:'test',name_en:'Test'}},[],{admin:false,ids:[]},()=>{},()=>{}),/Only platform admins/);
 await submitAdminForm({id:'createVillageForm',fields:{slug:'shamvadi',name_mr:'शामवाडी',district_mr:'पुणे',taluka_mr:'भोर',customer_name:'Contact',customer_email:'hello@example.com',customer_phone:'9923227879',gram_sevak_name:'Gram Sevak'}},[],{admin:true,ids:[]},url=>redirected=url,()=>{});
 const created=payloads.find(x=>x.rpc==='gramos_create_village_customer');
