@@ -21,7 +21,7 @@ assert(renderContactPage(village,'mr').includes('class="sv-contact-tab active" a
 const live={...village,id:'11111111-1111-4111-8111-111111111111',slug:'new-village',site_settings:{...village.site_settings,contact_map_embed_url:'javascript:alert(1)',facebook_url:'javascript:alert(1)'}};
 window.GRAMOS_CONFIG.turnstileSiteKey='sitekey-test';
 assert(renderContactPage(live,'mr').includes('id="visitorForm"'));
-assert(!renderContactPage(live,'mr').includes('<iframe'));
+assert(!renderContactPage(live,'mr').includes('src="javascript:')); // Address-based Maps embed is allowed without a pasted embed URL.
 assert(!renderContactPage(live,'mr').includes('href="javascript:'));
 const news=items.filter(i=>i.kind==='news');
 const story=news.find(i=>i.slug==='clean-village-drive');

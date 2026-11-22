@@ -15,9 +15,11 @@ assert.throws(()=>buildShamvadiVillage({slug:'safe'}),/village name/);
 let payloads=[], creds=[], signedIn=true;
 const query=(data)=>({eq(){return this},order(){return this},maybeSingle:async()=>({data:data?.[0]||null,error:null}),single:async()=>({data:data?.[0]||null,error:null}),then(yes,no){return Promise.resolve({data,error:null}).then(yes,no)}});
 const api={
+ rpc(name,args){payloads.push({rpc:name,args});return query(['created-village-id']);},
  auth:{signInWithPassword:async x=>{creds.push(x);return signedIn?{error:null}:{error:{message:'Invalid login credentials'}}}},
  from(table){return {
-  select(){return query([{id:'created-village-id',site_settings:{template_key:'shamvadi-blue'}}])},
+  select(){return query([{id:'created-village-id',slug:'shamvadi',status:'draft',site_settings:{template_key:'shamvadi-blue'}}])},
+  in(){return query([])},
   insert(payload){payloads.push({table,payload});return {select(){return query([{id:'created-village-id'}])}}},
   update(payload){payloads.push({table,payload});return {eq(){return this},select(){return query([{id:'created-village-id'}])}}}
  }}
@@ -41,16 +43,15 @@ signedIn=false;
 await assert.rejects(()=>submitAdminForm({id:'loginForm',fields:{email:'abc@example.test',password:'wrong'}},[],{admin:false,ids:[]},()=>{},()=>{}),/no default account or password/);
 signedIn=true;
 await assert.rejects(()=>submitAdminForm({id:'createVillageForm',fields:{slug:'test',name_en:'Test'}},[],{admin:false,ids:[]},()=>{},()=>{}),/Only platform admins/);
-await submitAdminForm({id:'createVillageForm',fields:{slug:'shamvadi',name_mr:'शामवाडी',district_mr:'पुणे',taluka_mr:'भोर'}},[],{admin:true,ids:[]},url=>redirected=url,()=>{});
-const insert=payloads.find(x=>x.table==='villages');
-assert(insert);
-assert.equal(insert.payload.slug,'shamvadi');
-assert.equal(insert.payload.site_settings.template_key,'shamvadi-blue');
-assert.equal(insert.payload.status,'draft');
-assert.equal(redirected,'/admin/villages/created-village-id/home');
+await submitAdminForm({id:'createVillageForm',fields:{slug:'shamvadi',name_mr:'शामवाडी',district_mr:'पुणे',taluka_mr:'भोर',customer_name:'Contact',customer_email:'hello@example.com',customer_phone:'9923227879',gram_sevak_name:'Gram Sevak'}},[],{admin:true,ids:[]},url=>redirected=url,()=>{});
+const created=payloads.find(x=>x.rpc==='gramos_create_village_customer');
+assert(created);
+assert.equal(created.args.p_village.slug,'shamvadi');
+assert.equal(created.args.p_customer.customer_name,'Contact');
+assert.equal(redirected,'/admin/clients?site=created-village-id');
 const dashboard=await renderAdmin(['admin'],'en',{admin:true,ids:[]},{email:'owner@example.test'});
-assert(dashboard.includes('Shamvadi Blue'));
-assert(dashboard.includes('name="district_mr"'));
-assert(dashboard.includes('name="taluka_en"'));
+assert(dashboard.includes('Customer register'));
+const create=await renderAdmin(['admin','new-village'],'en',{admin:true,ids:[]},{email:'owner@example.test'});
+assert(create.includes('name="district_mr"'));assert(create.includes('name="taluka_en"'));
 clearTimeout(window.__toastTimer);
-console.log('PASS: No preset password, valid Auth login, wrong credentials, role gate, shared template and independent new village sites.');
+console.log('PASS v4.9: Auth login, permissions, transactional village/customer creation and separate customer register.');
