@@ -68,7 +68,11 @@ export const referenceLinks=Object.freeze([
  ['social-justice','सामाजिक न्याय व विशेष सहाय्य विभाग','Social Justice Department','https://sjsa.maharashtra.gov.in','blue'],
  ['grievance','तक्रार निवारण प्रणाली','Grievance Redressal','https://grievances.maharashtra.gov.in/mr','blue'],
 ].map(([slug,mr,en,url,color],i)=>entry('service_links',slug,mr,en,'','',{color},url,i)));
-export const referenceFormsPaths=new Set(referenceForms.map(x=>x.external_url));
+export const referenceFormsPaths=new Set([
+ ...referenceForms.map(x=>x.external_url),
+ '/assets/forms/V_Swaraj_Gramsoft_Right_to_Service_Form_1.pdf',
+ '/assets/forms/V_Swaraj_Gramsoft_Right_to_Service_Form_2.pdf'
+]);
 /** Defaults are never written to another village's database. Published per-village
  * records override matching slugs; unique new records append without duplication. */
 export function mergeReferenceRows(items,kind,preview=false){

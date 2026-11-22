@@ -100,14 +100,45 @@ function committeeTables(v,items,l){
     <th>${text(title(v,'about_column_no',l,'अ.','No.'))}</th><th>${text(title(v,'about_column_name',l,'नाव','Name'))}</th><th>${text(title(v,'about_column_designation',l,'पदनाम','Designation'))}</th><th>${text(title(v,'about_column_role',l,'समितीतील पद','Committee Role'))}</th>
    </tr></thead><tbody>${g.rows.map((x,j)=>`<tr><td>${j+1}</td><td>${text(loc(x,'title',l))}</td><td>${text(loc(x,'subtitle',l))}</td><td>${text(meta(x,'committee_role',l))}</td></tr>`).join('')}</tbody></table></div>`:empty(l,v)}</section>`).join('');
 }
+/**
+ * The four reference infrastructure headings are always visible, in the same
+ * order as the supplied village website screenshot. Numbers only come from
+ * that village's published records or specifically assigned village settings.
+ * An empty field is shown as "No Data", never another village's values.
+ * Additional published cards are appended without replacing these headings.
+ */
+const INFRASTRUCTURE_LABELS = Object.freeze([
+ {key:'population',mr:'ग्रामपंचायतीची लोकसंख्या',en:'Gram Panchayat Population',aliases:['population','total-population','village-population','लोकसंख्या']},
+ {key:'households',mr:'एकूण कुटुंब संख्या',en:'Total Households',aliases:['households','total-households','families','कुटुंब']},
+ {key:'job_card_households',mr:'जॉबकार्ड धारक कुटुंब संख्या',en:'Job Card Holder Households',aliases:['job-card','job-card-households','jobcard','जॉबकार्ड']},
+ {key:'cctv',mr:'बसविण्यात आलेले CCTV',en:'Installed CCTV Cameras',aliases:['cctv','cctv-cameras','installed-cctv','सीसीटीव्ही']}
+]);
+const hasMetricValue=value=>value!==null&&value!==undefined&&String(value).trim()!=='';
 function facilityCards(v,items,l){
- const specific=all(items,'about_facilities'); const data=specific.length?specific:all(items,'facilities');
- // Keep identical grid geometry for the demo and a real village with no
- // published facilities. Empty cards are unmistakably placeholders, never data.
- const cards=data.length?data.map(x=>`<article class="sv-a-facility"><h3>${text(loc(x,'title',l))}</h3><strong>${text(meta(x,'value',l)||x.details?.value||loc(x,'body',l)||'—')}</strong></article>`).join(''):
-   Array.from({length:4},(_,i)=>`<article class="sv-a-facility sv-a-facility-placeholder"><h3>${i===0?text(tr(l,'अद्याप माहिती नाही','Not yet published')):'&nbsp;'}</h3><span aria-hidden="true" class="sv-a-placeholder-stripe"></span></article>`).join('');
- return `<div class="sv-a-facility-background"><div class="sv-a-facility-grid">${cards}</div></div>`;
+ const saved=[...all(items,'about_facilities'),...all(items,'facilities')];
+ const settings=v.site_settings||{};
+ const used=new Set();
+ const matches=(x,metric)=>{
+   const tokens=[x.details?.reference_key,x.details?.facility_key,x.slug,x.title_mr,x.title_en]
+      .filter(Boolean).map(t=>String(t).toLowerCase().trim());
+   const keys=[metric.key,metric.mr,metric.en,...metric.aliases].map(s=>s.toLowerCase());
+   // Exact aliases prevent job-card household metrics being mistaken for total households.
+   return tokens.some(token=>keys.includes(token));
+ };
+ const card=(label,value,empty=false)=>`<article class="sv-a-facility${empty?' sv-a-facility-placeholder':''}"><h3>${text(label)}</h3><strong class="${empty?'sv-a-no-data':''}">${text(empty?'No Data':value)}</strong></article>`;
+ const standard=INFRASTRUCTURE_LABELS.map(metric=>{
+   const index=saved.findIndex((x,i)=>!used.has(i)&&matches(x,metric));
+   const record=index>=0?saved[index]:null;
+   if(index>=0)used.add(index);
+   const stored=record ? (meta(record,'value',l)||record.details?.value||loc(record,'body',l)) : undefined;
+   const configured=settings?.infrastructure_metrics?.[metric.key] ?? settings?.[`facility_${metric.key}`];
+   const value=hasMetricValue(stored)?stored:configured;
+   return card(metric[l],value,!hasMetricValue(value));
+ });
+ const extra=saved.flatMap((x,i)=>used.has(i)?[]:[card(loc(x,'title',l),meta(x,'value',l)||x.details?.value||loc(x,'body',l)||'—')]);
+ return `<div class="sv-a-facility-background"><div class="sv-a-facility-grid">${[...standard,...extra].join('')}</div></div>`;
 }
+
 const palette=['#bf392b','#e86100','#974db6','#34495e','#149f88','#2983be','#eb7f1e','#20a85a'];
 /** All eight reference responsibility cards are immutable; village records add to them. */
 function dutyCards(v,items,l){

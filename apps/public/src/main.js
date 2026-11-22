@@ -270,7 +270,7 @@ app.addEventListener('change',async e=>{
 
 app.addEventListener('submit',async e=>{
  const form=e.target;
- if(!['grantSuperAdminForm','navbarBrandingForm','homeForm','footerForm','seoSettingsForm','contactSettingsForm','loginForm','settingsForm','aboutSettingsForm','serviceSettingsForm','projectSettingsForm','schemeSettingsForm','noticeSettingsForm','newsSettingsForm','gallerySettingsForm','createVillageForm','contentForm','staffAccessForm','visitorForm'].includes(form.id))return;
+ if(!['domainForm','grantSuperAdminForm','navbarBrandingForm','homeForm','footerForm','seoSettingsForm','contactSettingsForm','loginForm','settingsForm','aboutSettingsForm','serviceSettingsForm','projectSettingsForm','schemeSettingsForm','noticeSettingsForm','newsSettingsForm','gallerySettingsForm','createVillageForm','contentForm','staffAccessForm','visitorForm'].includes(form.id))return;
  e.preventDefault();
  const button=form.querySelector('[type="submit"]');if(button?.disabled)return;
  form.dataset.saveMode=e.submitter?.dataset.saveMode||'publish';

@@ -69,6 +69,7 @@ export async function renderAdmin(route,lang,role,user){
  <a href="/admin/villages/${esc(vId)}/branding" class="${section==='branding'?'selected':''}">${icon('image')} ${tr(lang,'नेव्हबार लोगो','Navbar logo')}</a>
  <a href="/admin/villages/${esc(vId)}/footer" class="${section==='footer'?'selected':''}">${icon('image')} ${tr(lang,'फूटर आणि तळाचे लोगो','Footer & bottom logos')}</a>
  <a href="/admin/villages/${esc(vId)}" class="${section==='settings'?'selected':''}">${icon('document')} ${tr(lang,'गावाची माहिती','Village information')}</a>
+ ${role.admin?`<a href="/admin/villages/${esc(vId)}/domains" class="${section==='domains'?'selected':''}">${icon('globe')} ${tr(lang,'कस्टम डोमेन','Custom domain')}</a>`:''}
  <a href="/admin/villages/${esc(vId)}/seo" class="${section==='seo'?'selected':''}">${icon('document')} ${tr(lang,'Google शोध माहिती','Google & SEO')}</a>
  <p class="sidebar-label">${tr(lang,'कार्यालय','OFFICE')}</p>
  <a href="/admin/villages/${esc(vId)}/submissions" class="${section==='submissions'?'selected':''}">${icon('mail')} ${tr(lang,'नागरिक तक्रारी','Complaints')}</a>
@@ -76,7 +77,7 @@ export async function renderAdmin(route,lang,role,user){
  <a href="/v/${esc(village.slug)}?preview=1" target="_blank" rel="noopener noreferrer">${icon('arrow')} ${tr(lang,'पूर्ण संकेतस्थळ पहा','Open full website')} ↗</a>
  </aside>`;
  
- const main=section==='overview'?overviewEditor(village,lang,items,draft,role):section==='home'?homeEditor(working,lang):section==='branding'?navbarBrandingEditor(working,lang):section==='footer'?footerEditor(working,lang):section==='settings'?settings(working,lang,role):section==='seo'?seoEditor(working,lang):section==='about'?aboutEditor(working,lang):section==='services'?servicesEditor(working,lang):section==='projects'?projectsEditor(working,lang):section==='schemes'?schemesEditor(working,lang):section==='news'?newsEditor(working,lang):section==='gallery'?galleryEditor(working,lang):section==='contact'?contactEditor(working,lang):section==='notices'?noticesEditor(working,lang):section==='content'&&kinds.includes(kind)?contentEditor(village,items,kind,lang):section==='submissions'?await inbox(village,lang,!role.admin&&!role.editorIds?.includes(vId)):section==='members'&&role.admin?await membersEditor(village,lang):`<div class="empty-data">Page not found</div>`;
+ const main=section==='overview'?overviewEditor(village,lang,items,draft,role):section==='home'?homeEditor(working,lang):section==='branding'?navbarBrandingEditor(working,lang):section==='footer'?footerEditor(working,lang):section==='settings'?settings(working,lang,role):section==='domains'&&role.admin?await domainsEditor(village,lang):section==='seo'?seoEditor(working,lang):section==='about'?aboutEditor(working,lang):section==='services'?servicesEditor(working,lang):section==='projects'?projectsEditor(working,lang):section==='schemes'?schemesEditor(working,lang):section==='news'?newsEditor(working,lang):section==='gallery'?galleryEditor(working,lang):section==='contact'?contactEditor(working,lang):section==='notices'?noticesEditor(working,lang):section==='content'&&kinds.includes(kind)?contentEditor(village,items,kind,lang):section==='submissions'?await inbox(village,lang,!role.admin&&!role.editorIds?.includes(vId)):section==='members'&&role.admin?await membersEditor(village,lang):`<div class="empty-data">Page not found</div>`;
  const target=section==='home'?'home':section==='content'?'':PAGE_TARGETS.includes(section)?section:'';
  const addShortcut=target?`<div class="admin-add-element"><a class="button-lite" href="/admin/villages/${esc(vId)}/content/page_elements?page=${esc(target)}">${icon('plus')} ${tr(lang,'या पानावर घटक जोडा','Add element to this page')}</a></div>`:'';
  const tools=reviewerOnly?'':section==='content'?'':pageContentTools(vId,section,lang);
@@ -476,6 +477,36 @@ async function inbox(v,lang,readOnly=false){
  return `<div class="admin-page-top"><div><p class="eyebrow">WORKFLOW / INBOX</p><h1>${tr(lang,'नागरिक संदेश','Visitor submissions')}</h1><p>${tr(lang,'संदेश आणि फोटो तपासा. फोटो आपोआप सार्वजनिक होत नाहीत.','Review incoming messages and photos. Visitor images are never auto-published.')}</p></div></div><section class="admin-panel"><div class="panel-heading"><h2>${tr(lang,'संदेश सूची','Recent submissions')}</h2><span>${subs.length} submissions <button type="button" data-action="refresh-inbox" class="button-lite">↻ ${tr(lang,'नवीन संदेश तपासा','Refresh inbox')}</button></span></div>${subs.length?subs.map(s=>`<article class="submission-card"><div class="submission-top"><div><h3>${esc(s.sender_name)}</h3><p>${esc(s.sender_email)} · ${formatDate(s.created_at,lang)}</p></div>${pill(s.status)}</div><p class="submission-message">${s.subject?`<strong>${tr(lang,'विषय','Subject')}: ${esc(s.subject)}</strong><br>`:''}${esc(s.message)}</p>${s.attachment_path?`<button class="button-lite" data-action="view-attachment" data-id="${esc(s.id)}">${icon('image')} ${tr(lang,'खाजगी फोटो पहा','View private attachment')}</button>`:''}${readOnly?'':`<div class="submission-actions"><button class="button-lite" data-action="submission-status" data-id="${esc(s.id)}" data-next="reviewed">${tr(lang,'तपासले','Mark reviewed')}</button><button class="button-lite" data-action="submission-status" data-id="${esc(s.id)}" data-next="rejected">${tr(lang,'नाकारले','Reject')}</button></div>`}</article>`).join(''):'<div class="empty-data">No submissions yet. Visitors can submit after Turnstile is configured.</div>'}</section>`;
 }
 
+async function domainRequest(villageId,action,hostname=''){
+ const session=(await api.auth.getSession()).data.session;
+ if(!session?.access_token)throw new Error('Sign in again to manage domains.');
+ const res=await fetch('/api/domain-admin'+(action==='list'?`?village_id=${encodeURIComponent(villageId)}`:''),{
+   method:action==='list'?'GET':'POST',headers:{Authorization:`Bearer ${session.access_token}`,'Content-Type':'application/json'},
+   body:action==='list'?undefined:JSON.stringify({village_id:villageId,action,hostname})
+ });
+ const result=await res.json();if(!res.ok)throw new Error(result.error||'Domain request failed');return result;
+}
+async function domainsEditor(v,lang){
+ let info;try{info=await domainRequest(v.id,'list');}catch(e){return `<section class="admin-panel"><h1>${tr(lang,'कस्टम डोमेन','Custom domain')}</h1><p>${esc(e.message)}</p></section>`;}
+ const active=info.domains?.find(d=>d.status==='active');
+ const pending=info.domains?.find(d=>d.status==='pending');
+ const displayed=active?.hostname||pending?.hostname||'';
+ const host=esc(displayed);
+ return `<div class="admin-page-top"><div><p class="eyebrow">VILLAGE DOMAIN / ${tr(lang,'गावाचा पत्ता','DOMAIN')}</p><h1>${tr(lang,'कस्टम डोमेन','Custom domain')}</h1><p>${tr(lang,'प्रत्येक गावासाठी स्वतंत्र डोमेन जोडा. डोमेन अद्याप नाही तर — — दिसेल. फक्त मुख्य प्रशासक बदल करू शकतो.','Add a separate domain for this village. Until one is assigned, the field shows — —. Only Super Admins can edit it.')}</p></div></div>
+ <section class="admin-panel form-panel"><h2>${tr(lang,'पूर्वनिर्धारित गावाची लिंक','Predefined village URL')}</h2><p class="domain-code">/v/${esc(v.slug)}</p><p><a href="https://gramos-public.vercel.app/v/${encodeURIComponent(v.slug)}" target="_blank" rel="noopener noreferrer">https://gramos-public.vercel.app/v/${esc(v.slug)} ↗</a></p><p class="small-muted">${tr(lang,'कस्टम डोमेनवरसुद्धा हाच /v/गाव पत्ता राहील.','The /v/village path stays the same on the custom domain.')}</p></section>
+ <form id="domainForm" data-id="${esc(v.id)}"><section class="admin-panel form-panel"><h2>${tr(lang,'गावाचा डोमेन पत्ता','Village custom domain')}</h2><p>${tr(lang,'सध्याचा पत्ता','Current domain')}: <strong>${host||'— —'}</strong></p>
+ ${field('hostname',tr(lang,'डोमेन लिहा (उदा. village.in)','Enter custom domain (e.g. village.in)'),displayed,{placeholder:'— —',required:true})}
+ <p class="small-muted">${tr(lang,'https:// किंवा /v/ जोडू नका; ते आपोआप वापरले जाईल.','Do not include https:// or /v/; the website adds them automatically.')}</p>
+ <button class="btn btn-dark" type="submit">${tr(lang,'डोमेन जोडा / बदला','Save / change domain')}</button></section></form>
+ <section class="admin-panel"><h2>${tr(lang,'डोमेन पडताळणी','Domain status and verification')}</h2><p>${info.vercelConnected?tr(lang,'Vercel API जोडलेले आहे. DNS पूर्ण केल्यावर तपासा.','Vercel API is connected. Verify after completing DNS.'):tr(lang,'Vercel API अजून जोडलेले नाही. gramos-public → Domains मध्ये डोमेन जोडा आणि Vercel token सेट करा.','Vercel API is not configured. Add the domain under gramos-public → Domains and configure the Vercel server token.')}</p>
+ ${(info.domains||[]).map(d=>`<div class="domain-record"><strong>${esc(d.hostname)}</strong> <span class="status status-${esc(d.status)}">${esc(d.status)}</span>
+ ${d.vercel_details?.recommendedCNAME?`<p class="small-muted">CNAME: <code>${esc(JSON.stringify(d.vercel_details.recommendedCNAME))}</code></p>`:''}
+ ${d.vercel_details?.recommendedIPv4?`<p class="small-muted">A: <code>${esc(JSON.stringify(d.vercel_details.recommendedIPv4))}</code></p>`:''}
+ ${Array.isArray(d.vercel_details?.verification)&&d.vercel_details.verification.length?`<details><summary>${tr(lang,'मालकी पडताळणी TXT रेकॉर्ड','Ownership verification TXT records')}</summary>${d.vercel_details.verification.map(x=>`<p class="small-muted">${esc(x.type||'TXT')}: ${esc(x.domain||x.name||d.hostname)} = <code>${esc(x.value||'')}</code></p>`).join('')}</details>`:''}
+ <div class="domain-record-tools"><button type="button" class="button-lite" data-action="domain-check" data-id="${esc(v.id)}" data-hostname="${esc(d.hostname)}">${tr(lang,'DNS तपासा आणि सक्रिय करा','Verify & activate')}</button><button type="button" class="button-danger" data-action="domain-remove" data-id="${esc(v.id)}" data-hostname="${esc(d.hostname)}">${tr(lang,'काढून टाका','Remove')}</button></div></div>`).join('')||'<p>— —</p>'}
+ <p class="small-muted">${tr(lang,'डोमेन पडताळणी पूर्ण होईपर्यंत जुन्या गावाच्या लिंकवरच वेबसाइट चालेल.','The original village link continues working until Vercel ownership and DNS verification succeed.')}</p></section>`;
+}
+
 export async function submitAdminForm(form,route,role,navigate,rerender){
  if(!api) throw new Error('Supabase is not configured');
  if(form.id!=='loginForm' && form.id!=='createVillageForm' && form.id!=='grantSuperAdminForm' && !role.admin && !role.editorIds?.includes(form.dataset.id))throw new Error('Your account cannot edit this village.');
@@ -492,6 +523,11 @@ export async function submitAdminForm(form,route,role,navigate,rerender){
      throw new Error(error.message);
    }
    notif('Signed in successfully'); navigate('/admin');return;
+ }
+ if(form.id==='domainForm'){
+   if(!role.admin)throw new Error('Only Super Admin can manage domains.');
+   const hostname=get('hostname');const response=await domainRequest(form.dataset.id,'register',hostname);
+   notif(response.message||'Domain saved');rerender();return;
  }
  if(form.id==='grantSuperAdminForm'){
    if(!role.admin)throw new Error('Only Super Admin can grant this role.');
@@ -711,6 +747,12 @@ export async function submitAdminForm(form,route,role,navigate,rerender){
 }
 export async function adminAction(button,route,role,navigate,rerender){
  const action=button.dataset.action, itemId=button.dataset.id,next=button.dataset.next;
+ if(action==='domain-check'||action==='domain-remove'){
+   if(!role.admin)throw new Error('Only Super Admin can manage domains.');
+   if(action==='domain-remove'&&!confirm('Remove this domain from the village? The old /v/village link will still work.'))return true;
+   const response=await domainRequest(itemId,action==='domain-check'?'check':'remove',button.dataset.hostname||'');
+   notif(response.message||'Domain updated');rerender();return true;
+ }
  if(action==='logout'){await api.auth.signOut();notif('Signed out');navigate('/admin/login');return true;}
  if(action==='nav-logo-reset'){
    if(!role.admin&&!role.editorIds?.includes(route[2]))throw new Error('Only a village editor can change the logo.');

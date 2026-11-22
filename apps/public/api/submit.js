@@ -37,7 +37,10 @@ export default async function handler(req,res){
     const verify=await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({secret:e.turnstile,response:b.turnstile_token,remoteip:String(req.headers['x-forwarded-for']||'').split(',')[0].trim()})});
     const verified=await verify.json();
     if(!verified.success)return json(res,403,{error:'Security verification failed. Try again.'});
-    const allowedHosts=[process.env.SITE_URL,process.env.VERCEL_URL&&`https://${process.env.VERCEL_URL}`,...String(process.env.TURNSTILE_ALLOWED_HOSTNAMES||'').split(',')]
+    // Verified village-specific custom domains are automatically allowed after activation.
+    // This prevents a form from another village's domain being reused across tenants.
+    const registeredDomains=await rest(e,'village_domains',`?village_id=eq.${b.village_id}&status=eq.active&verified_at=not.is.null&select=hostname`);
+    const allowedHosts=[process.env.SITE_URL,process.env.VERCEL_URL&&`https://${process.env.VERCEL_URL}`,...String(process.env.TURNSTILE_ALLOWED_HOSTNAMES||'').split(','),...registeredDomains.map(d=>d.hostname)]
        .filter(Boolean).map(v=>{try{return new URL(v).hostname.toLowerCase()}catch{return String(v).trim().toLowerCase()}});
     if(allowedHosts.length && (!verified.hostname || !allowedHosts.includes(String(verified.hostname).toLowerCase())))
       return json(res,403,{error:'Turnstile verification was issued for a different website'});

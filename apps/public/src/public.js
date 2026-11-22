@@ -14,7 +14,7 @@ import {renderShamvadiHomepage,homeHeader,homeFooter,homeBottomLogo} from './hom
 import {esc,loc,icon,imageURL,safeLink,formatDate} from './utils.js';
 import {socialUrl} from './social.js';
 import {renderPageElements} from './page-elements.js';
-import {villageBySlug,itemsFor,publishedItemsFor,configured,getSiteDraft,withVillageDraft} from './data.js';
+import {villageBySlug,itemsFor,publishedItemsFor,configured,getSiteDraft,withVillageDraft,api,call} from './data.js';
 import {getDemo} from './demo.js';
 
 const names={home:['मुखपृष्ठ','Home'],about:['ग्रामपंचायतीबद्दल','About Gram Panchayat'],gallery:['फोटो गॅलरी','Photo Gallery'],services:['लोकसेवा','Citizen Services'],news:['बातम्या','News'],notices:['सूचना फलक','Notice Board'],schemes:['शासकीय योजना','Government Schemes'],beneficiaries:['लाभार्थी यादी','Beneficiary Lists'],projects:['विकासकामे','Development Works'],staff:['पदाधिकारी व कर्मचारी','Office Bearers'],leaders:['माननीय पदाधिकारी','Leadership'],contact:['संपर्क','Contact'],pages:['महत्वाची पाने','Important Pages'],facilities:['ग्राम सुविधा','Village Facilities']};
@@ -69,7 +69,15 @@ export async function renderPublic(route,lang,role){
  // The site body remains Marathi; the language control only translates the navigation.
  const navLanguage=lang; lang='mr';
  if(route[0]==='demo'){const {village,items}=getDemo();return villagePage(village,items,lang,route.slice(1),false,navLanguage);}
- if(route[0]==='v'&&route[1]){const v=await villageBySlug(route[1]);if(!v)return `<div class="gp-error"><h1>Village not found</h1><a href="/demo">View demo</a></div>`;const allowed=role.admin||role.editorIds?.includes(v.id);const preview=new URLSearchParams(location.search).get('preview')==='1'&&allowed;if(v.status!=='published'&&!preview)return `<div class="gp-error"><h1>Website is not published</h1><a href="/admin">Open admin</a></div>`;const items=preview?await itemsFor(v.id):await publishedItemsFor(v.id);const draft=preview?await getSiteDraft(v.id):null;const branded=withVillageDraft(v,draft?.changes);return villagePage(branded,items,lang,route.slice(2),preview,navLanguage);}
+ if(route[0]==='v'&&route[1]){
+   const domainSlug=document.querySelector('meta[name="gramos-domain-village"]')?.getAttribute('content');
+   if(domainSlug&&domainSlug!==route[1])return '<main class="gp-error"><h1>404 — Not found</h1></main>';
+   const v=await villageBySlug(route[1]);if(!v)return `<div class="gp-error"><h1>Village not found</h1><a href="/demo">View demo</a></div>`;const allowed=role.admin||role.editorIds?.includes(v.id);const preview=new URLSearchParams(location.search).get('preview')==='1'&&allowed;if(v.status!=='published'&&!preview)return `<div class="gp-error"><h1>Website is not published</h1><a href="/admin">Open admin</a></div>`;// Direct links and internal SPA links both use the verified custom domain.
+   if(!preview&&location.hostname.endsWith('.vercel.app')){
+     const mapped=await call(api.from('village_domains').select('hostname').eq('village_id',v.id).eq('status','active').maybeSingle());
+     if(mapped?.hostname){location.replace(`https://${mapped.hostname}${location.pathname}${location.search}${location.hash}`);return '<div class="initial-loading">Redirecting to village domain…</div>';}
+   }
+   const items=preview?await itemsFor(v.id):await publishedItemsFor(v.id);const draft=preview?await getSiteDraft(v.id):null;const branded=withVillageDraft(v,draft?.changes);return villagePage(branded,items,lang,route.slice(2),preview,navLanguage);}
  // There is deliberately NO platform homepage or village directory.
  // A village is public only at its own /v/<slug> route (or a separately verified
  // hostname mapping when that feature is installed).

@@ -38,6 +38,7 @@ try{
   const u=String(url);requests.push(u);
   if(u.includes('siteverify'))return {ok:true,json:async()=>({success:true,hostname:'gramos.example'})};
   if(u.includes('/rest/v1/villages'))return {ok:true,json:async()=>[{id:village}]};
+  if(u.includes('/rest/v1/village_domains'))return {ok:true,json:async()=>[]};
   if(u.includes('/rest/v1/submissions')&&opts.method==='POST')return {ok:true,json:async()=>[]};
   if(u.includes('/rest/v1/submissions'))return {ok:true,json:async()=>[]};
   throw Error('Unexpected fetch '+u);
@@ -47,7 +48,7 @@ try{
  assert(requests.some(url=>url.includes('siteverify'))&&requests.some(url=>url.includes('submissions')));
  const bad=response();await submit({method:'POST',headers:{},body:{...validBody,website:'spam-site'}},bad);assert.equal(bad.code,400);
  const big=response();await submit({method:'POST',headers:{'content-length':'9000000'},body:validBody},big);assert.equal(big.code,413);
- globalThis.fetch=async u=>String(u).includes('siteverify')?{ok:true,json:async()=>({success:true,hostname:'wrong.example'})}:(()=>{throw Error('Database must not be called for wrong hostname')})();
+ globalThis.fetch=async u=>String(u).includes('siteverify')?{ok:true,json:async()=>({success:true,hostname:'wrong.example'})}:String(u).includes('/rest/v1/village_domains')?{ok:true,json:async()=>[]}:(()=>{throw Error('No further database access is allowed for an unrecognized hostname')})();
  const wrong=response();await submit({method:'POST',headers:{},body:validBody},wrong);assert.equal(wrong.code,403);
  // Mock signed private attachment, only members for that village and explicit roles.
  const user='22222222-2222-4222-8222-222222222222', submissionId='33333333-3333-4333-8333-333333333333';

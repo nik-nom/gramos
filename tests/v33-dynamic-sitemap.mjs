@@ -50,6 +50,7 @@ globalThis.fetch=async input=>{
  if(table==='villages'){
   const slug=u.searchParams.get('slug')?.replace(/^eq\./,'');return {ok:true,json:async()=>slug?[a,c].filter(v=>v.slug===slug):[a,c]};
  }
+ if(table==='village_domains'){return {ok:true,json:async()=>[]};}
  if(table==='content_items'){
   const slug=u.searchParams.get('slug')?.replace(/^eq\./,'');return {ok:true,json:async()=>slug?[article].filter(x=>x.slug===slug):[article]};
  }
@@ -57,7 +58,7 @@ globalThis.fetch=async input=>{
 };
 function res(){return {headers:{},statusCode:200,setHeader(k,v){this.headers[k.toLowerCase()]=v;},end(body=''){this.body=String(body);return this;}};}
 try{
- let r=res();await sitemapHandler({method:'GET',headers:{host:'not-canonical.example'}},r);
+ let r=res();await sitemapHandler({method:'GET',headers:{host:'gramos-public.vercel.app'}},r);
  assert.equal(r.statusCode,200);assert.match(r.body,/v\/shirpur\/news\/water-project/);
  assert.match(r.headers['content-type'],/application\/xml/);
  r=res();await pageHandler({method:'GET',url:'/v/shirpur/services',query:{slug:'shirpur',page:'services'},headers:{host:'localhost:8000'}},r);
@@ -70,8 +71,8 @@ try{
  r=res();await pageHandler({method:'GET',url:'/v/secret/home',query:{slug:'secret',page:'home'},headers:{host:'localhost'}},r);
  assert.equal(r.statusCode,404);
  r=res();await pageHandler({method:'GET',url:'/v/secret?preview=1',query:{slug:'secret',page:'home'},headers:{host:'localhost'}},r);
- assert.equal(r.statusCode,200);assert.match(r.headers['x-robots-tag'],/noindex/);
- r=res();robotsHandler({method:'GET',headers:{host:'localhost'}},r);
+ assert.equal(r.statusCode,404);assert.match(r.headers['x-robots-tag'],/noindex/);
+ r=res();await robotsHandler({method:'GET',headers:{host:'localhost'}},r);
  assert.equal(r.statusCode,200);assert.match(r.body,/Sitemap: https:\/\/gramos.example.in\/sitemap.xml/);
  assert.ok(counts.villages>1);
 }finally{

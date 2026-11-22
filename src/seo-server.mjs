@@ -7,7 +7,7 @@ export const shortDate=(value)=>/^\d{4}-\d{2}-\d{2}/.test(String(value||''))?Str
 export const canonicalOrigin=(req)=>{
   const configured=String(process.env.SITE_URL||'').trim();
   if(/^https:\/\/[a-z0-9][a-z0-9.:-]*(?:\/[\w-]+)?\/?$/i.test(configured))return configured.replace(/\/+$/,'');
-  const candidate=String(req?.headers?.['x-forwarded-host']||req?.headers?.host||'localhost:8000').split(',')[0].trim();
+  const candidate=String(req?.headers?.host||'localhost:8000').split(',')[0].trim();
   if(!/^[\w.-]+(?::\d{1,5})?$/.test(candidate))return 'http://localhost:8000';
   return `${/^localhost(?::|$)|^127\.0\.0\.1(?::|$)/i.test(candidate)?'http':'https'}://${candidate}`;
 };

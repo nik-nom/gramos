@@ -61,6 +61,19 @@ export default async function handler(req,res){
  catch(error){console.error('GramOS admin HTML unavailable',error);res.statusCode=503;res.end('Admin temporarily unavailable');}
 }
 `;
+// Admin preview URLs are isolated from public hostname routing and never indexed.
+const adminPreview=`import {readFile} from 'node:fs/promises';
+const template=new URL('../index.html',import.meta.url);
+export default async function handler(req,res){
+ if(!['GET','HEAD'].includes(req.method)){res.statusCode=405;return res.end('Method not allowed');}
+ const url=new URL(req.url||'/', 'https://admin.invalid');
+ const preview=url.searchParams.get('preview')==='1'||req.query?.preview==='1';
+ if(!preview){res.statusCode=404;res.setHeader('X-Robots-Tag','noindex,nofollow');return res.end('Admin preview only');}
+ res.setHeader('Content-Type','text/html; charset=utf-8');res.setHeader('X-Robots-Tag','noindex,nofollow');res.setHeader('Cache-Control','no-store');
+ try{const html=await readFile(template,'utf8');res.statusCode=200;res.end(req.method==='HEAD'?'':html);}
+ catch(error){console.error('Admin preview unavailable',error.message);res.statusCode=503;res.end('Preview unavailable');}
+}
+`;
 const adminRobots=`export default function handler(req,res){
  res.statusCode=200;res.setHeader('Content-Type','text/plain; charset=utf-8');res.setHeader('Cache-Control','no-store');res.end('User-agent: *\\nDisallow: /\\n');
 }
@@ -110,10 +123,11 @@ const excelUpload=async()=>false;`);
   await rm(join(app,'src','admin.js'));
   await writeFile(join(app,'api','not-found.js'),noFound);
  }else{
-  for(const file of ['attachment.js','beneficiary-file.js'])await cp(join(root,'api',file),join(app,'api',file));
+  for(const file of ['domain-admin.js','attachment.js','beneficiary-file.js'])await cp(join(root,'api',file),join(app,'api',file));
   await writeFile(join(app,'api','not-found.js'),noFound);
   await writeFile(join(app,'api','admin-robots.js'),adminRobots);
   await writeFile(join(app,'api','admin-page.js'),adminPage);
+  await writeFile(join(app,'api','page.js'),adminPreview);
  }
  const config={
   version:2,cleanUrls:true,trailingSlash:false,
@@ -123,6 +137,6 @@ const excelUpload=async()=>false;`);
   functions:target==='public'?{'api/page.js':{includeFiles:'page-template.html'}}:{'api/page.js':{includeFiles:'index.html'},'api/admin-page.js':{includeFiles:'index.html'}}
  };
  await writeFile(join(app,'vercel.json'),JSON.stringify(config,null,2)+'\n');
- await writeFile(join(app,'package.json'),JSON.stringify({name:`gramos-${target}`,version:'4.7.1',private:true,type:'module'},null,2)+'\n');
+ await writeFile(join(app,'package.json'),JSON.stringify({name:`gramos-${target}`,version:'4.7.2',private:true,type:'module'},null,2)+'\n');
 }
 console.log('Split generated: apps/public and apps/admin. Commit both folders.');
