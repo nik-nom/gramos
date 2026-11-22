@@ -20,11 +20,11 @@
     },
     {
       "source": "/admin",
-      "destination": "/index.html"
+      "destination": "/api/admin-page"
     },
     {
       "source": "/admin/:path*",
-      "destination": "/index.html"
+      "destination": "/api/admin-page"
     },
     {
       "source": "/v/:slug/news/:article",
@@ -40,7 +40,7 @@
     },
     {
       "source": "/v/:path*",
-      "destination": "/index.html"
+      "destination": "/api/not-found"
     },
     {
       "source": "/demo",
@@ -88,6 +88,9 @@
   ],
   "functions": {
     "api/page.js": {
+      "includeFiles": "index.html"
+    },
+    "api/admin-page.js": {
       "includeFiles": "index.html"
     }
   }

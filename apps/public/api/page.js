@@ -3,7 +3,7 @@ import {readFile} from 'node:fs/promises';
 import {publicVillage,publicArticle} from './lib/seo-data.mjs';
 import {resolveSEO} from '../src/seo.js';
 import {routeFromPath,canonicalOrigin,htmlWithMetadata,validSlug} from '../src/seo-server.mjs';
-const htmlLocation=new URL('../index.html',import.meta.url);
+const htmlLocation=new URL('../page-template.html',import.meta.url);
 export default async function handler(req,res){
  if(!['GET','HEAD'].includes(req.method)){res.statusCode=405;return res.end('Method not allowed');}
  const raw=new URL(req.url||'/',`https://${req.headers?.host||'localhost'}`);

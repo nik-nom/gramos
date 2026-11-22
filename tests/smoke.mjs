@@ -17,10 +17,10 @@ for(const lang of ['en','mr'])for(const path of paths){
   console.log(`OK ${lang}: /demo${path?'/'+path:''}`);
 }
 const root=await renderPublic([],'en',{admin:false,ids:[]});
-assert(root.includes('sv-header') && root.includes('sv-gallery-row') && root.includes('sv-news-cards') && root.includes('sv-footer'), 'Root must display screenshot-style homepage until a real village is published');
+assert(root.includes('404') && !root.includes('gp-directory') && !root.includes('Published village sites'), 'Root must NOT show the platform homepage or village directory');
 const admin=await renderAdmin(['admin'],'en',{admin:false,ids:[]},null);
 assert(admin.includes('Connect Supabase first'));
 const config=JSON.parse(readFileSync(new URL('../vercel.json',import.meta.url)));
 assert(config.rewrites.some(x=>x.source==='/v/:path*'));
 assert(config.rewrites.some(x=>x.source==='/admin/:path*'));
-console.log('PASS: Screenshot-matched Shamvadi homepage, Node.js-friendly routes, language variants, fallback and rewrites.');
+console.log('PASS: Screenshot-matched demo and public routes, no platform homepage, Node.js route and language contract.');

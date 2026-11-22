@@ -1,4 +1,4 @@
-import {applyPublicMetadata,clearPublicMetadata} from './seo.js';
+import {applyPublicMetadata} from './seo.js';
 import {renderContactPage} from './contact.js';
 import {renderNewsPage,renderNewsDetail} from './news.js';
 import {renderGalleryPage} from './gallery.js';
@@ -14,7 +14,7 @@ import {renderShamvadiHomepage,homeHeader,homeFooter,homeBottomLogo} from './hom
 import {esc,loc,icon,imageURL,safeLink,formatDate} from './utils.js';
 import {socialUrl} from './social.js';
 import {renderPageElements} from './page-elements.js';
-import {publishedVillages,villageBySlug,itemsFor,publishedItemsFor,configured,getSiteDraft,withVillageDraft} from './data.js';
+import {villageBySlug,itemsFor,publishedItemsFor,configured,getSiteDraft,withVillageDraft} from './data.js';
 import {getDemo} from './demo.js';
 
 const names={home:['मुखपृष्ठ','Home'],about:['ग्रामपंचायतीबद्दल','About Gram Panchayat'],gallery:['फोटो गॅलरी','Photo Gallery'],services:['लोकसेवा','Citizen Services'],news:['बातम्या','News'],notices:['सूचना फलक','Notice Board'],schemes:['शासकीय योजना','Government Schemes'],beneficiaries:['लाभार्थी यादी','Beneficiary Lists'],projects:['विकासकामे','Development Works'],staff:['पदाधिकारी व कर्मचारी','Office Bearers'],leaders:['माननीय पदाधिकारी','Leadership'],contact:['संपर्क','Contact'],pages:['महत्वाची पाने','Important Pages'],facilities:['ग्राम सुविधा','Village Facilities']};
@@ -70,9 +70,8 @@ export async function renderPublic(route,lang,role){
  const navLanguage=lang; lang='mr';
  if(route[0]==='demo'){const {village,items}=getDemo();return villagePage(village,items,lang,route.slice(1),false,navLanguage);}
  if(route[0]==='v'&&route[1]){const v=await villageBySlug(route[1]);if(!v)return `<div class="gp-error"><h1>Village not found</h1><a href="/demo">View demo</a></div>`;const allowed=role.admin||role.editorIds?.includes(v.id);const preview=new URLSearchParams(location.search).get('preview')==='1'&&allowed;if(v.status!=='published'&&!preview)return `<div class="gp-error"><h1>Website is not published</h1><a href="/admin">Open admin</a></div>`;const items=preview?await itemsFor(v.id):await publishedItemsFor(v.id);const draft=preview?await getSiteDraft(v.id):null;const branded=withVillageDraft(v,draft?.changes);return villagePage(branded,items,lang,route.slice(2),preview,navLanguage);}
- if(route.length)return `<div class="gp-error"><h1>Page not found</h1><a href="/demo">View demo</a></div>`;
- let villages=[];try{villages=await publishedVillages();}catch(e){console.warn('Village directory unavailable; showing demo fallback.',e);}
- if(villages.length===0){const {village,items}=getDemo();return villagePage(village,items,lang,[],false,navLanguage);}
- if(villages.length===1){const v=villages[0];const items=await publishedItemsFor(v.id);return villagePage(v,items,lang,[],false,navLanguage);}
- clearPublicMetadata();return `<div class="gp-directory"><div class="gp-top-line"><div class="container gp-top-inner">${T('ग्रामपंचायत संकेतस्थळ निर्देशिका','Gram Panchayat Website Directory',lang)} <a href="/admin">${T('प्रशासन','Admin',lang)} →</a></div></div><div class="container gp-directory-inner"><img src="/assets/gp-mark.svg" width="70" alt=""><h1>GramOS</h1><p>${T('ग्रामपंचायत संकेतस्थळे, बातम्या, लोकसेवा आणि विकासकामांची माहिती.','Gram Panchayat websites, citizen services and local information.',lang)}</p><a class="gp-yellow-btn" href="/demo">${T('शामवाडी शैलीतील नमुना संकेतस्थळ','View Shamvadi-style demo',lang)} →</a><h2>${T('प्रकाशित संकेतस्थळे','Published village sites',lang)}</h2><div class="gp-dir-grid">${villages.map(v=>`<a href="/v/${esc(v.slug)}"><strong>${esc(loc(v,'name',lang))}</strong><span>${esc(loc(v,'district',lang))}</span></a>`).join('')||`<p>${T('अद्याप कोणतीही साइट प्रकाशित नाही.','No village website is published yet.',lang)}</p>`}</div></div></div>`;
+ // There is deliberately NO platform homepage or village directory.
+ // A village is public only at its own /v/<slug> route (or a separately verified
+ // hostname mapping when that feature is installed).
+ return `<main class="gp-error" role="main"><h1>404 — Not found</h1></main>`;
 }

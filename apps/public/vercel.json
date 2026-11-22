@@ -4,6 +4,18 @@
   "trailingSlash": false,
   "rewrites": [
     {
+      "source": "/",
+      "destination": "/api/not-found"
+    },
+    {
+      "source": "/index",
+      "destination": "/api/not-found"
+    },
+    {
+      "source": "/index.html",
+      "destination": "/api/not-found"
+    },
+    {
       "source": "/admin",
       "destination": "/api/not-found"
     },
@@ -33,15 +45,11 @@
     },
     {
       "source": "/demo",
-      "destination": "/index.html"
+      "destination": "/api/not-found"
     },
     {
       "source": "/demo/:path*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/v/:path*",
-      "destination": "/index.html"
+      "destination": "/api/not-found"
     }
   ],
   "headers": [
@@ -81,7 +89,7 @@
   ],
   "functions": {
     "api/page.js": {
-      "includeFiles": "index.html"
+      "includeFiles": "page-template.html"
     }
   }
 }

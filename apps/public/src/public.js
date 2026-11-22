@@ -1,4 +1,4 @@
-import {applyPublicMetadata,clearPublicMetadata} from './seo.js';
+import {applyPublicMetadata} from './seo.js';
 import {renderContactPage} from './contact.js';
 import {renderNewsPage,renderNewsDetail} from './news.js';
 import {renderGalleryPage} from './gallery.js';
@@ -14,7 +14,7 @@ import {renderShamvadiHomepage,homeHeader,homeFooter,homeBottomLogo} from './hom
 import {esc,loc,icon,imageURL,safeLink,formatDate} from './utils.js';
 import {socialUrl} from './social.js';
 import {renderPageElements} from './page-elements.js';
-import {publishedVillages,villageBySlug,itemsFor,publishedItemsFor,configured,getSiteDraft,withVillageDraft} from './data.js';
+import {villageBySlug,itemsFor,publishedItemsFor,configured,getSiteDraft,withVillageDraft} from './data.js';
 import {getDemo} from './demo.js';
 
 const names={home:['मुखपृष्ठ','Home'],about:['ग्रामपंचायतीबद्दल','About Gram Panchayat'],gallery:['फोटो गॅलरी','Photo Gallery'],services:['लोकसेवा','Citizen Services'],news:['बातम्या','News'],notices:['सूचना फलक','Notice Board'],schemes:['शासकीय योजना','Government Schemes'],beneficiaries:['लाभार्थी यादी','Beneficiary Lists'],projects:['विकासकामे','Development Works'],staff:['पदाधिकारी व कर्मचारी','Office Bearers'],leaders:['माननीय पदाधिकारी','Leadership'],contact:['संपर्क','Contact'],pages:['महत्वाची पाने','Important Pages'],facilities:['ग्राम सुविधा','Village Facilities']};
@@ -36,7 +36,7 @@ function publicHeader(v,lang,active,preview){
  const village=loc(v,'name',lang),tal=loc(v,'taluka',lang),district=loc(v,'district',lang);
  return `<div class="gp-top-line"><div class="container gp-top-inner"><span>${gov}</span><div><a href="${href(v,'contact')}">✉ ${esc(v.email||T('संपर्क','Contact',lang))}</a><button type="button" data-action="lang" class="gp-top-lang">${lang==='mr'?'English':'मराठी'}</button></div></div></div>
  <header class="gp-header"><div class="container gp-head-inner"><a class="gp-brand" href="${base(v)}"><img class="gp-logo" src="${esc(imageURL(v.logo_url)||'/assets/gp-mark.svg')}" alt=""><span><small>${T('अधिकृत ग्रामपंचायत संकेतस्थळ','Official Gram Panchayat Website',lang)}</small><strong>${T('ग्रामपंचायत ','Gram Panchayat ',lang)}${esc(village)}</strong><em>${T('ता. ','Tal. ',lang)}${esc(tal)} · ${T('जि. ','Dist. ',lang)}${esc(district)}</em></span></a><div class="gp-header-right"><div class="gp-flag"><i></i><i></i><i></i></div><span>${T('महाराष्ट्र · भारत','Maharashtra · India',lang)}<small>${T('नागरिकांसाठी माहिती व सेवा','Information & services for citizens',lang)}</small></span></div></div></header>
- <nav class="gp-nav"><div class="container gp-nav-inner"><button id="mobileMenu" class="gp-mobile-menu" type="button" aria-label="Open navigation">☰ &nbsp; ${T('मेनू','Menu',lang)}</button><div id="publicNavItems" class="gp-nav-links">${NAV.map(k=>`<a class="${k===active?'active':''}" href="${href(v,k)}">${pageLabel(k,lang)}</a>`).join('')}</div><a href="/admin/login" class="gp-admin-entry">${T('प्रशासन','Admin',lang)}</a></div></nav>
+ <nav class="gp-nav"><div class="container gp-nav-inner"><button id="mobileMenu" class="gp-mobile-menu" type="button" aria-label="Open navigation">☰ &nbsp; ${T('मेनू','Menu',lang)}</button><div id="publicNavItems" class="gp-nav-links">${NAV.map(k=>`<a class="${k===active?'active':''}" href="${href(v,k)}">${pageLabel(k,lang)}</a>`).join('')}</div></div></nav>
  ${v.id==='demo'?`<div class="gp-demo-ribbon">${T('नमुना संकेतस्थळ — येथे दाखवलेली माहिती अधिकृत नाही.','DEMO — Sample content, not official information.',lang)}</div>`:''}
  ${preview?`<div class="gp-preview-ribbon">${T('खाजगी प्रिव्ह्यू — प्रकाशित नसलेली माहिती दिसू शकते.','PRIVATE PREVIEW — unpublished content may be visible.',lang)}</div>`:''}`;
 }
@@ -70,9 +70,8 @@ export async function renderPublic(route,lang,role){
  const navLanguage=lang; lang='mr';
  if(route[0]==='demo'){const {village,items}=getDemo();return villagePage(village,items,lang,route.slice(1),false,navLanguage);}
  if(route[0]==='v'&&route[1]){const v=await villageBySlug(route[1]);if(!v)return `<div class="gp-error"><h1>Village not found</h1><a href="/demo">View demo</a></div>`;const allowed=role.admin||role.editorIds?.includes(v.id);const preview=new URLSearchParams(location.search).get('preview')==='1'&&allowed;if(v.status!=='published'&&!preview)return `<div class="gp-error"><h1>Website is not published</h1><a href="/admin">Open admin</a></div>`;const items=preview?await itemsFor(v.id):await publishedItemsFor(v.id);const draft=preview?await getSiteDraft(v.id):null;const branded=withVillageDraft(v,draft?.changes);return villagePage(branded,items,lang,route.slice(2),preview,navLanguage);}
- if(route.length)return `<div class="gp-error"><h1>Page not found</h1><a href="/demo">View demo</a></div>`;
- let villages=[];try{villages=await publishedVillages();}catch(e){console.warn('Village directory unavailable; showing demo fallback.',e);}
- if(villages.length===0){const {village,items}=getDemo();return villagePage(village,items,lang,[],false,navLanguage);}
- if(villages.length===1){const v=villages[0];const items=await publishedItemsFor(v.id);return villagePage(v,items,lang,[],false,navLanguage);}
- clearPublicMetadata();return `<div class="gp-directory"><div class="gp-top-line"><div class="container gp-top-inner">${T('ग्रामपंचायत संकेतस्थळ निर्देशिका','Gram Panchayat Website Directory',lang)} <a href="/admin">${T('प्रशासन','Admin',lang)} →</a></div></div><div class="container gp-directory-inner"><img src="/assets/gp-mark.svg" width="70" alt=""><h1>GramOS</h1><p>${T('ग्रामपंचायत संकेतस्थळे, बातम्या, लोकसेवा आणि विकासकामांची माहिती.','Gram Panchayat websites, citizen services and local information.',lang)}</p><a class="gp-yellow-btn" href="/demo">${T('शामवाडी शैलीतील नमुना संकेतस्थळ','View Shamvadi-style demo',lang)} →</a><h2>${T('प्रकाशित संकेतस्थळे','Published village sites',lang)}</h2><div class="gp-dir-grid">${villages.map(v=>`<a href="/v/${esc(v.slug)}"><strong>${esc(loc(v,'name',lang))}</strong><span>${esc(loc(v,'district',lang))}</span></a>`).join('')||`<p>${T('अद्याप कोणतीही साइट प्रकाशित नाही.','No village website is published yet.',lang)}</p>`}</div></div></div>`;
+ // There is deliberately NO platform homepage or village directory.
+ // A village is public only at its own /v/<slug> route (or a separately verified
+ // hostname mapping when that feature is installed).
+ return `<main class="gp-error" role="main"><h1>404 — Not found</h1></main>`;
 }

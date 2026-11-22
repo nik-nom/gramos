@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import adminHandler from '../apps/admin/api/admin-page.js';
+import public404 from '../apps/public/api/not-found.js';
+import publicPage from '../apps/public/api/page.js';
+import {routeFromPath} from '../src/seo-server.mjs';
+const read=async p=>readFile(new URL(p,import.meta.url),'utf8');
+const response=()=>({statusCode:200,headers:{},setHeader(k,v){this.headers[k.toLowerCase()]=v;},end(body=''){this.body=String(body);return this;}});
+let r=response();public404({method:'GET'},r);
+assert.equal(r.statusCode,404);assert.match(r.headers['x-robots-tag'],/noindex/);assert.equal(r.body,'Not found');
+r=response();await adminHandler({method:'GET'},r);
+assert.equal(r.statusCode,200);assert.match(r.headers['content-type'],/text\/html/);assert.match(r.headers['x-robots-tag'],/noindex/);assert.match(r.body,/<div id="app">/);
+assert.match(r.body,/src\/main.js/);
+r=response();await adminHandler({method:'HEAD'},r);assert.equal(r.statusCode,200);assert.equal(r.body,'');
+r=response();await adminHandler({method:'POST'},r);assert.equal(r.statusCode,405);
+const fetchOrig=globalThis.fetch,envURL=process.env.SUPABASE_URL,envKey=process.env.SUPABASE_PUBLISHABLE_KEY;
+process.env.SUPABASE_URL='https://example.supabase.co';process.env.SUPABASE_PUBLISHABLE_KEY='sb_publishable_test';
+const v={id:'11111111-1111-1111-1111-111111111111',slug:'shirpur',name_mr:'शिरपूर',status:'published',site_settings:{},updated_at:'2026-11-22T00:00:00Z'};
+globalThis.fetch=async url=>({ok:true,json:async()=>new URL(url).searchParams.get('slug')==='eq.shirpur'?[v]:[]});
+try{
+ r=response();await publicPage({method:'GET',url:'/v/shirpur',query:{slug:'shirpur'},headers:{host:'gramos-public.vercel.app'}},r);
+ assert.equal(r.statusCode,200);assert.match(r.body,/<title>.*शिरपूर/);assert.match(r.body,/src\/main.js/);
+ r=response();await publicPage({method:'GET',url:'/v/missing',query:{slug:'missing'},headers:{host:'gramos-public.vercel.app'}},r);assert.equal(r.statusCode,404);
+ assert.equal(routeFromPath('/'),null);assert.deepEqual(routeFromPath('/v/shirpur'),{slug:'shirpur',page:'home',article:''});
+}finally{globalThis.fetch=fetchOrig;if(envURL===undefined)delete process.env.SUPABASE_URL;else process.env.SUPABASE_URL=envURL;if(envKey===undefined)delete process.env.SUPABASE_PUBLISHABLE_KEY;else process.env.SUPABASE_PUBLISHABLE_KEY=envKey;}
+const pub=JSON.parse(await read('../apps/public/vercel.json'));
+const adm=JSON.parse(await read('../apps/admin/vercel.json'));
+assert(pub.rewrites.some(x=>x.source==='/'&&x.destination==='/api/not-found'));
+assert(pub.rewrites.some(x=>x.source==='/admin/:path*'&&x.destination==='/api/not-found'));
+assert(adm.rewrites.some(x=>x.source==='/admin/:path*'&&x.destination==='/api/admin-page'));
+assert(!pub.rewrites.some(x=>x.source==='/demo'&&x.destination==='/index.html'));
+assert(!(await read('../apps/public/src/homepage.js')).includes('href="/admin/login"'));
+console.log('PASS v4.7.1 routes: public 404; village still renders; missing village 404; admin GET/HEAD/POST; private HTML; no public admin/footer links');
