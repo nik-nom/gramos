@@ -1,0 +1,6 @@
+{
+  "name": "gramos-public",
+  "version": "4.7.0",
+  "private": true,
+  "type": "module"
+}
