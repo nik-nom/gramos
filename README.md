@@ -8,7 +8,7 @@ See **V4.7_START_HERE.md** for installation and changes. This preserves all v4.6
 
 **GramOS v4.4 update:** The supplied Shamvadi About-page mission, values and eight responsibilities are now built into the public template and appear in every new village preview. They cannot be changed from Admin; admins can add optional points and extra cards. Existing village data is untouched. See `V4.4_START_HERE.md`.
 
-> **Current upgrade: GramOS v4.3** — see [V4.3_START_HERE.md](./V4.3_START_HERE.md). The older v4.2 global branding page is retired; branding is per village and the global table is retained only for rollback.
+> **Current upgrade: GramOS v4.3** — see [V4.3_START_HERE.md](./V4.3_START_HERE.md). The older v4.2 global branding page is retired; branding is per village and the global table is retained only for rollback
 
 ## **Current release: GramOS v4.1**
 
