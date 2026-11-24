@@ -6,10 +6,12 @@ const t=(language,mr,en)=>language==='mr'?mr:en;
 export function villageQuickLinks(v,language){
  const base=`/admin/villages/${encodeURIComponent(v.id)}`;
  const links=[
+  ['home','home',t(language,'मुख्यपृष्ठ','Edit homepage'),`${base}/home`],
+  ['forms','mail',t(language,'आलेले अर्ज','Received forms'),`${base}/submissions`],
   ['notices','bell',t(language,'सूचना','Notices'),`${base}/content/notices`],
   ['schemes','document',t(language,'योजना','Schemes'),`${base}/content/schemes`],
   ['gallery','image',t(language,'गॅलरी','Gallery'),`${base}/content/gallery`],
-  ['documents','document',t(language,'दस्तऐवज','Documents'),`${base}/content/service_forms`],
+  ['documents','document',t(language,'PDF अर्ज','PDF forms'),`${base}/content/service_forms`],
   ['village','pin',t(language,'गाव माहिती','Village Info'),`${base}`],
   ['settings','settings',t(language,'सेटिंग्ज','Settings'),`${base}/overview`],
   ['publish','check',t(language,'प्रकाशित करा','Publish'),`${base}/overview`]

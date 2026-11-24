@@ -57,7 +57,7 @@ function forms(v,items,l,preview=false){
  <div class="sv-l-form-grid">${list.map(x=>{const url=pdfURL(x.external_url),builtin=referenceFormsPaths.has(url);
  return `<article class="sv-l-download"><h3>${esc(loc(x,'title',l))}</h3>
  ${!x.template_default&&loc(x,'body',l)?`<p>${esc(loc(x,'body',l))}</p>`:''}
- ${url?`<a href="${esc(url)}" ${builtin?'download':''} ${builtin?'':'target="_blank" rel="noopener noreferrer"'} aria-label="${esc(loc(x,'title',l))} — ${tr(l,'PDF डाउनलोड करा','Download PDF')}">${tr(l,'डाउनलोड करा','Download')}</a>`:`<span class="sv-l-download-unavailable">${tr(l,'दस्तऐवज अद्याप जोडलेला नाही','Document not uploaded')}</span>`}
+ ${url?`<div class="sv-l-form-actions"><a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${tr(l,'PDF पहा','View PDF')} ↗</a><a href="${esc(url)}" ${builtin?'download':''} ${builtin?'':'target="_blank" rel="noopener noreferrer"'} aria-label="${esc(loc(x,'title',l))} — ${tr(l,'PDF डाउनलोड करा','Download PDF')}">${tr(l,'डाउनलोड करा','Download')}</a></div>`:`<span class="sv-l-download-unavailable">${tr(l,'दस्तऐवज अद्याप जोडलेला नाही','Document not uploaded')}</span>`}
  ${builtin&&x.slug==='citizen-services-application'?`<details class="sv-l-other-form-copies"><summary>${tr(l,'इतर PDF प्रती','Other PDF copies')}</summary><div>${userSuppliedRightToServiceCopies.map((copy,index)=>`<a href="${copy}" download>${tr(l,'अर्ज नमुना','Application form')} ${index+1} (PDF)</a>`).join('')}</div></details>`:''}
  </article>`;}).join('')}</div></section>`;
 }

@@ -105,6 +105,29 @@ async function render(){
    document.documentElement.lang=currentRoute[0]==='admin'?lang:'mr';
    app.innerHTML=html;
    if(currentRoute[0]==='admin'){
+     const content=app.querySelector('.admin-content');const heading=content?.querySelector('.admin-page-top');if(heading&&heading.parentElement===content)content.prepend(heading);
+     // Put optional wording/label controls behind a single disclosure, not an endless form.
+     for(const id of ['aboutSettingsForm','serviceSettingsForm','schemeSettingsForm','beneficiarySettingsForm','noticeSettingsForm','newsSettingsForm','gallerySettingsForm','projectSettingsForm']){
+       const form=document.getElementById(id),grid=form?.querySelector('.form-grid');if(!grid)continue;
+       const fields=[...grid.children].filter(el=>el.matches('label.field')&&!el.querySelector('[required]'));
+       if(fields.length<=6)continue;
+       const details=document.createElement('details');details.className='gx6-advanced gx6-wide';
+       const summary=document.createElement('summary');summary.textContent=lang==='mr'?'अधिक शीर्षके व मजकूर':'More headings and text';
+       const inside=document.createElement('div');inside.className='form-grid';
+       for(const field of fields.slice(4))if(!field.querySelector('[name$="_url"]'))inside.append(field);
+       if(inside.children.length){details.append(summary,inside);grid.append(details);}
+     }
+     const record=document.getElementById('contentForm');
+     if(record){
+       const advanced=document.createElement('details');advanced.className='gx6-advanced';
+       const summary=document.createElement('summary');summary.textContent=lang==='mr'?'अधिक पर्याय':'More options';advanced.append(summary);
+       for(const name of ['subtitle_mr','subtitle_en','sort_order','image_url','external_url']){
+         // PDF and service link inputs stay visible where they are needed most.
+         if(name==='external_url'&&['service_forms','services','service_links','notices','videos'].includes(record.dataset.kind))continue;
+         const field=record.querySelector(`[name="${name}"]`)?.closest('label.field');if(field)advanced.append(field);
+       }
+       const actions=record.querySelector('.gx-save-actions');if(actions&&advanced.children.length>1)actions.before(advanced);
+     }
      const forms=['seoSettingsForm','contactSettingsForm','newsSettingsForm','gallerySettingsForm','aboutSettingsForm','serviceSettingsForm','schemeSettingsForm','beneficiarySettingsForm','noticeSettingsForm','projectSettingsForm'];
      for(const id of forms){
        const form=document.getElementById(id),publish=form?.querySelector('button[type="submit"]');
@@ -120,7 +143,7 @@ async function render(){
    startCarousels();
    startReveals();
    if(document.getElementById('turnstile-mount'))initTurnstile();
-   if(currentRoute[0]==='admin'&&currentRoute[3]==='submissions')inboxTimer=setInterval(()=>{if(!document.hidden)render();},30000);
+   // Forms refresh only on request, so opening a private form is never interrupted.
  }catch(error){
    if(run!==pendingRender)return;
    console.error('GramOS render failure:',error);
@@ -279,7 +302,7 @@ app.addEventListener('change',async e=>{
 
 app.addEventListener('submit',async e=>{
  const form=e.target;
- if(!['domainForm','grantSuperAdminForm','navbarBrandingForm','homeForm','footerForm','seoSettingsForm','contactSettingsForm','loginForm','recoverPasswordForm','setPasswordForm','settingsForm','aboutSettingsForm','serviceSettingsForm','projectSettingsForm','schemeSettingsForm','noticeSettingsForm','newsSettingsForm','gallerySettingsForm','createVillageForm','createStaffLoginForm','clientRecordForm','contentForm','staffAccessForm','visitorForm'].includes(form.id))return;
+ if(!['domainForm','grantSuperAdminForm','navbarBrandingForm','homeForm','footerForm','seoSettingsForm','contactSettingsForm','loginForm','recoverPasswordForm','setPasswordForm','settingsForm','aboutSettingsForm','serviceSettingsForm','projectSettingsForm','schemeSettingsForm','beneficiarySettingsForm','noticeSettingsForm','newsSettingsForm','gallerySettingsForm','createVillageForm','createStaffLoginForm','clientRecordForm','contentForm','staffAccessForm','visitorForm'].includes(form.id))return;
  e.preventDefault();
  const button=e.submitter||form.querySelector('[type="submit"]');if(button?.disabled)return;
  form.dataset.saveMode=e.submitter?.dataset.saveMode||'publish';
@@ -287,7 +310,7 @@ app.addEventListener('submit',async e=>{
  try{
    if(form.id==='visitorForm')await sendSubmission(form);
    else await submitAdminForm(form,currentRoute,role,navigate,render);
- }catch(error){notif(error?.message||'Something went wrong',true);}
+ }catch(error){const status=form.querySelector('[data-form-status]');if(status)status.textContent=error?.message||'Submission failed';notif(error?.message||'Something went wrong',true);}
  finally{submitButtons.forEach(x=>{if(x.isConnected)x.disabled=false;});}
 });
 
@@ -295,7 +318,7 @@ function fileAsBase64(file){return new Promise((resolve,reject)=>{const reader=n
 async function sendSubmission(form){
  const config=window.GRAMOS_CONFIG||{};
  // Normal form: a server-side rate limiter and honeypot protect submissions without a CAPTCHA.
- const token='';
+ const token=String(new FormData(form).get('cf-turnstile-response')||'');
  const fd=new FormData(form), attachment=fd.get('attachment');
  let data=null;
  if(attachment instanceof File && attachment.size){
@@ -306,7 +329,7 @@ async function sendSubmission(form){
  const res=await fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
  const answer=await res.json().catch(()=>({error:'Server did not return JSON'}));
  if(!res.ok)throw new Error(answer.error||'Submission failed');
- form.reset();window.turnstile?.reset?.();notif('आपला संदेश तपासणीसाठी पाठवला आहे.');
+ form.reset();window.turnstile?.reset?.();const status=form.querySelector('[data-form-status]');const message='आपला संदेश तपासणीसाठी पाठवला आहे. / Your form was submitted successfully.';if(status)status.textContent=message;notif(message);
 }
 
 let turnstileScriptPromise;
