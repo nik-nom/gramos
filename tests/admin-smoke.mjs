@@ -15,7 +15,9 @@ globalThis.document={title:''};
 globalThis.window={GRAMOS_CONFIG:{supabaseUrl:'https://gramos-test.supabase.co',supabaseAnonKey:'public-test-key'},supabase:{createClient:()=>({from:dbQuery})}};
 const {renderAdmin}=await import('../src/admin.js');
 const role={admin:true,ids:[]},user={email:'admin@example.test'};
+location.search='?view=settings&part=banner';
 const homeSettings=await renderAdmin(['admin','villages',villageId,'home'],'mr',role,user);
+location.search='';
 for(const key of ['welcome_title_mr','nav_mr','gallery_heading_mr','hero_image_url','quote_mr']){
  assert(homeSettings.includes(`name="${key}"`),`Homepage setting ${key} missing from independent Home editor`);
 }

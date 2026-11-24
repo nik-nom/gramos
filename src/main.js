@@ -106,27 +106,98 @@ async function render(){
    app.innerHTML=html;
    if(currentRoute[0]==='admin'){
      const content=app.querySelector('.admin-content');const heading=content?.querySelector('.admin-page-top');if(heading&&heading.parentElement===content)content.prepend(heading);
-     // Put optional wording/label controls behind a single disclosure, not an endless form.
-     for(const id of ['aboutSettingsForm','serviceSettingsForm','schemeSettingsForm','beneficiarySettingsForm','noticeSettingsForm','newsSettingsForm','gallerySettingsForm','projectSettingsForm']){
-       const form=document.getElementById(id),grid=form?.querySelector('.form-grid');if(!grid)continue;
-       const fields=[...grid.children].filter(el=>el.matches('label.field')&&!el.querySelector('[required]'));
-       if(fields.length<=6)continue;
-       const details=document.createElement('details');details.className='gx6-advanced gx6-wide';
-       const summary=document.createElement('summary');summary.textContent=lang==='mr'?'अधिक शीर्षके व मजकूर':'More headings and text';
-       const inside=document.createElement('div');inside.className='form-grid';
-       for(const field of fields.slice(4))if(!field.querySelector('[name$="_url"]'))inside.append(field);
-       if(inside.children.length){details.append(summary,inside);grid.append(details);}
+     // Move controls without cloning or disabling them: FormData and the upload handlers
+     // still see the original fields, names, values and validation rules.
+     const t=(mr,en)=>lang==='mr'?mr:en;
+     const disclose=(title,open=false)=>{const d=document.createElement('details');d.className='gx62-disclosure';d.open=open;const summary=document.createElement('summary');summary.textContent=title;d.append(summary);return d;};
+     const menu=app.querySelector('.gx62-navigation');if(menu&&window.matchMedia('(max-width: 820px)').matches)menu.open=false;
+     // Secondary page settings stay available, but records are the first task.
+     const pageForms=['aboutSettingsForm','serviceSettingsForm','schemeSettingsForm','beneficiarySettingsForm','noticeSettingsForm','newsSettingsForm','gallerySettingsForm','projectSettingsForm'];
+     for(const id of pageForms){
+       const form=document.getElementById(id),panel=form?.closest('section.admin-panel');if(!panel)continue;
+       const title=panel.querySelector('h2')?.textContent||t('पानाची सेटिंग्ज','Page settings');
+       const details=disclose(title,new URLSearchParams(location.search).get('view')==='settings');panel.before(details);details.append(panel);panel.classList.add('gx62-inner-panel');
+     }
+     // Homepage deep links open exactly one editor. Inactive controls are excluded
+     // from FormData so saving a banner never writes announcements or other drafts.
+     const home=document.getElementById('homeForm');
+     if(home){
+       const parts=['banner','announcement','welcome','headings','navigation','weather','order'];
+       const requested=new URLSearchParams(location.search).get('part');
+       const active=parts.includes(requested)?requested:'banner';
+       home.dataset.homePart=active;
+       for(const [index,panel] of [...home.querySelectorAll(':scope > section.admin-panel')].entries()){
+         if(parts[index]!==active){panel.hidden=true;for(const input of panel.querySelectorAll('input,select,textarea,button'))input.disabled=true;continue;}
+         panel.classList.add('gx63-focus-panel');
+         const title=panel.querySelector('h2')?.textContent?.replace(/^\d+\.\s*/, '');
+         if(title&&heading)heading.querySelector('h1').textContent=title;
+         if(heading)heading.querySelector('p').textContent=t('हा विभाग बदलून जतन करा.','Edit this section, then save your changes.');
+         for(const inner of panel.querySelectorAll('details.admin-edit-advanced'))inner.open=true;
+       }
+     }
+     const preview=app.querySelector('.admin-preview-wide');if(preview){const d=disclose(t('वेबसाइट पूर्वावलोकन','Website preview'));preview.before(d);d.append(preview);const frame=preview.querySelector('iframe');if(frame)frame.loading='lazy';}
+     // Collapse redundant legacy reference links (all individual records remain in the main edit links).
+     if(new URLSearchParams(location.search).get('view')==='settings')for(const panel of content.querySelectorAll(':scope > section.admin-panel')){
+       if(panel.matches('.gx6-page-tools,.admin-preview-wide')||panel.querySelector('form')||!panel.querySelector('.sv-about-admin-links'))continue;
+       const d=disclose(panel.querySelector('h2')?.textContent||t('अधिक पर्याय','More options'));panel.before(d);d.append(panel);
+     }
+     if(currentRoute[3]==='content'){
+       const params=new URLSearchParams(location.search);
+       for(const a of content?.querySelectorAll('a[href]')||[]){
+         const url=new URL(a.href,location.origin);if(url.pathname!==location.pathname||url.origin!==location.origin)continue;
+         for(const key of ['from','category'])if(params.has(key))url.searchParams.set(key,params.get(key));
+         a.href=url.pathname+url.search;
+       }
      }
      const record=document.getElementById('contentForm');
      if(record){
-       const advanced=document.createElement('details');advanced.className='gx6-advanced';
-       const summary=document.createElement('summary');summary.textContent=lang==='mr'?'अधिक पर्याय':'More options';advanced.append(summary);
-       for(const name of ['subtitle_mr','subtitle_en','sort_order','image_url','external_url']){
-         // PDF and service link inputs stay visible where they are needed most.
-         if(name==='external_url'&&['service_forms','services','service_links','notices','videos'].includes(record.dataset.kind))continue;
-         const field=record.querySelector(`[name="${name}"]`)?.closest('label.field');if(field)advanced.append(field);
+       const kind=record.dataset.kind, actions=record.querySelector('.gx-save-actions');
+       const advanced=disclose(t('अधिक पर्याय','More options'));advanced.classList.add('gx6-advanced');
+       const primarySubtitle=['officials','leaders','committees','gallery','banners','about_facts'].includes(kind);
+       const directLink=['service_forms','services','service_links','notices','videos','page_elements'].includes(kind);
+       const optional=['sort_order','image_url',...(!primarySubtitle?['subtitle_mr','subtitle_en']:[]),...(!directLink?['external_url']:[]),...(['gallery','banners','metrics','leaders','officials','about_facts','committees','service_forms'].includes(kind)?['body_mr','body_en']:[]),... (kind==='news'?['source_title_mr','source_title_en','related_links_mr','related_links_en']:[])];
+       for(const name of optional){const field=record.querySelector(`[name="${name}"]`)?.closest('label.field');if(field)advanced.append(field);}
+       if(actions&&advanced.children.length>1)actions.before(advanced);
+       // Put Marathi/English counterparts side by side at desktop widths.
+       const stack=record.querySelector('.stacked-form');if(stack)for(const f of [...stack.children]){
+         if(!f.matches('label.field'))continue;const input=f.querySelector('[name$="_mr"]');if(!input)continue;
+         const partner=record.querySelector(`[name="${input.name.slice(0,-3)}_en"]`)?.closest('label.field');if(!partner||partner.parentElement!==stack)continue;
+         const pair=document.createElement('div');pair.className='gx62-language-pair';f.before(pair);pair.append(f,partner);
        }
-       const actions=record.querySelector('.gx-save-actions');if(actions&&advanced.children.length>1)actions.before(advanced);
+     }
+     // Clear field groups and friendly labels; no extra Save buttons inside fields.
+     if(record){
+       const stack=record.querySelector('.stacked-form');
+       if(stack){
+         const actions=stack.querySelector('.gx-save-actions');
+         const createGroup=(title)=>{const el=document.createElement('section');el.className='gx63-field-group';const h=document.createElement('h3');h.textContent=title;el.append(h);actions.before(el);return el;};
+         if(actions){
+           const basics=createGroup(t('१. नाव व माहिती','1. Name & information'));
+           const extra=createGroup(t('२. विभागाची माहिती','2. Item details'));
+           const media=createGroup(t('३. फोटो व कागदपत्रे','3. Photos & documents'));
+           const mediaNames=new Set(['image_url','external_url','file_path','public_file_approved']);
+           const basicNames=new Set(['title_mr','title_en','subtitle_mr','subtitle_en','body_mr','body_en']);
+           for(const el of [...stack.children]){
+             if(el.matches('.gx63-field-group,.gx6-advanced,.gx-save-actions,small,input[type="hidden"]'))continue;
+             const inputs=[...el.querySelectorAll('input,textarea,select')];
+             const isMedia=el.matches('.upload-box,.admin-pdf-existing')||inputs.some(i=>i.type==='file'||mediaNames.has(i.name));
+             const isBasic=inputs.some(i=>basicNames.has(i.name));
+             (isMedia?media:isBasic?basics:extra).append(el);
+           }
+           for(const group of [basics,extra,media])if(group.children.length===1)group.remove();
+           const advanced=stack.querySelector('.gx6-advanced');if(advanced)actions.before(advanced);
+           const simpleLabels={title_mr:t('नाव / शीर्षक — मराठी','Name / title — Marathi'),title_en:t('नाव / शीर्षक — इंग्रजी','Name / title — English'),body_mr:t('माहिती — मराठी','Description — Marathi'),body_en:t('माहिती — इंग्रजी','Description — English'),external_url:t('वेबसाइट / PDF लिंक','Website / PDF link')};
+           for(const [key,title] of Object.entries(simpleLabels)){const label=record.querySelector(`[name="${key}"]`)?.closest('label.field')?.querySelector(':scope > span');if(label)label.textContent=title;}
+         }
+       }
+     }
+     // Make invalid controls in collapsed sections visible before the browser focuses them.
+     for(const form of app.querySelectorAll('form:not(#visitorForm)'))form.addEventListener('invalid',event=>{for(let el=event.target.parentElement;el&&el!==app;el=el.parentElement)if(el.tagName==='DETAILS')el.open=true;},true);
+     // All upload controls retain their real inputs and handlers; show the selected file name.
+     for(const input of app.querySelectorAll('input[type="file"][data-target]')){
+       const label=input.closest('label');if(!label)continue;const status=document.createElement('small');status.className='gx62-file-status';status.setAttribute('aria-live','polite');label.after(status);
+       const target=input.closest('form')?.querySelector(`[name="${input.dataset.target}"]`);if(target?.value)status.textContent=t('फाइल जोडली आहे','File attached');
+       input.addEventListener('change',()=>{status.textContent=input.files?.[0]?.name||'';});
      }
      const forms=['seoSettingsForm','contactSettingsForm','newsSettingsForm','gallerySettingsForm','aboutSettingsForm','serviceSettingsForm','schemeSettingsForm','beneficiarySettingsForm','noticeSettingsForm','projectSettingsForm'];
      for(const id of forms){
@@ -137,6 +208,11 @@ async function render(){
        const draft=document.createElement('button');draft.type='submit';draft.className='button-lite gx-draft-option';draft.dataset.saveMode='draft';
        draft.textContent=lang==='mr'?'मसुदा जतन करा':'Save draft';
        publish.insertAdjacentElement('beforebegin',draft);
+     }
+     for(const form of app.querySelectorAll('form')){
+       const draft=form.querySelector('[data-save-mode="draft"]'),publish=form.querySelector('[data-save-mode="publish"]');if(!draft||!publish)continue;
+       draft.classList.remove('btn','btn-dark');draft.classList.add('button-lite');draft.textContent=lang==='mr'?'मसुदा जतन करा':'Save draft';
+       publish.classList.remove('button-lite');publish.classList.add('btn','btn-dark');publish.textContent=lang==='mr'?'जतन करा व प्रकाशित करा':'Save & publish';
      }
    }
    enablePublicReadMore();
