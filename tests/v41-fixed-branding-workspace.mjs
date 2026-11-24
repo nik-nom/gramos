@@ -47,7 +47,7 @@ const overview=await renderAdmin(['admin','villages',a.id,'overview'],'mr',role,
 const footerEditor=await renderAdmin(['admin','villages',a.id,'footer'],'en',role,user);
 const homeEditor=await renderAdmin(['admin','villages',a.id,'home'],'mr',role,user);
 assert(overview.includes('admin-overview-grid')&&overview.includes('Workspace overview')===false);
-assert.equal((overview.match(/class="admin-overview-card"/g)||[]).length,11);
+assert.equal((overview.match(/class="admin-overview-card"/g)||[]).length,13);
 assert(overview.includes('फक्त गाव अ ची सूचना')&&!overview.includes('फक्त गाव ब ची सूचना'));
 assert(footerEditor.includes(platformLegalNotice()));
 assert(footerEditor.includes('admin-legal-fixed')&&footerEditor.includes('id="footerForm"'));

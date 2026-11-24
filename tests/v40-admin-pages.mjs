@@ -19,8 +19,8 @@ assert(home.includes('id="homeForm"')&&home.includes('name="quote_mr"')&&home.in
 assert(footer.includes('id="footerForm"')&&footer.includes('name="footer_logo_11"'));
 assert(settings.includes('id="settingsForm"')&&!settings.includes('name="quote_mr"'));
 assert(home.includes('admin-preview-wide')&&footer.includes('admin-preview-wide'));
-assert(home.includes('Overview & preview')&&home.includes('Edit homepage')&&home.includes('Information pages'));
-assert(home.includes('admin-v42-nav-group')&&!home.includes('Add photos, cards & records'));
+assert(home.includes('Overview')&&home.includes('Edit homepage')&&home.includes('Website pages'));
+assert(home.includes('gx62-nav-settings')&&!home.includes('Add photos, cards & records'));
 assert(!home.includes('PUBLIC WEBSITE SECTIONS'));
 // Page-level saves preserve unrelated settings, even when the user has many logos.
 const logoUrls=Array.from({length:12},(_,i)=>`https://cdn.example.org/logo-${i}.png`);
