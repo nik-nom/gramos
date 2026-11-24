@@ -37,13 +37,14 @@ const routesPublic=[
 const routesAdmin=[
   {source:'/robots.txt',destination:'/api/admin-robots'},
   {source:'/sitemap.xml',destination:'/api/not-found'},
-  {source:'/admin',destination:'/api/admin-page'},
-  {source:'/admin/:path*',destination:'/api/admin-page'},
+  {source:'/admin',destination:'/admin-shell.html'},
+  {source:'/admin/:path*',destination:'/admin-shell.html'},
   {source:'/v/:slug/news/:article',destination:'/api/page?slug=:slug&page=news&article=:article'},
   {source:'/v/:slug/:page',destination:'/api/page?slug=:slug&page=:page'},
   {source:'/v/:slug',destination:'/api/page?slug=:slug'},
   {source:'/v/:path*',destination:'/api/not-found'},
-  {source:'/demo',destination:'/index.html'},
+  {source:'/demo',destination:'/admin-shell.html'},
+  {source:'/demo/:path*',destination:'/admin-shell.html'},
 ];
 const noFound=`export default function handler(req,res){
  res.statusCode=404;res.setHeader('X-Robots-Tag','noindex,nofollow');res.setHeader('Cache-Control','no-store');res.end('Not found');
@@ -135,16 +136,18 @@ const excelUpload=async()=>false;`);
   await writeFile(join(app,'api','not-found.js'),noFound);
   await writeFile(join(app,'api','admin-robots.js'),adminRobots);
   await writeFile(join(app,'api','admin-page.js'),adminPage);
+  await cp(join(app,'index.html'),join(app,'admin-shell.html'));
   await writeFile(join(app,'api','page.js'),adminPreview);
  }
  const config={
-  version:2,cleanUrls:true,trailingSlash:false,
+  version:2,cleanUrls:target==='public',trailingSlash:false,
+  ...(target==='admin'?{framework:null,buildCommand:null,outputDirectory:'.'}:{}),
   ...(target==='admin'?{redirects:[{source:'/',destination:'/admin/login',permanent:false}]}:{}),
   rewrites:target==='public'?routesPublic:routesAdmin,
   headers:[{source:'/(.*)',headers:target==='admin'?[...securityHeaders,{key:'X-Robots-Tag',value:'noindex, nofollow'}]:securityHeaders}],
   functions:target==='public'?{'api/page.js':{includeFiles:'page-template.html'}}:{'api/page.js':{includeFiles:'index.html'},'api/admin-page.js':{includeFiles:'index.html'}}
  };
  await writeFile(join(app,'vercel.json'),JSON.stringify(config,null,2)+'\n');
- await writeFile(join(app,'package.json'),JSON.stringify({name:`gramos-${target}`,version:'6.0.0',private:true,type:'module'},null,2)+'\n');
+ await writeFile(join(app,'package.json'),JSON.stringify({name:`gramos-${target}`,version:'6.5.0',private:true,type:'module'},null,2)+'\n');
 }
 console.log('Split generated: apps/public and apps/admin. Commit both folders.');

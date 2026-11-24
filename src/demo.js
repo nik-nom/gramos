@@ -325,3 +325,24 @@ demoVillage.site_settings={...demoVillage.site_settings,
  schemes_intro_mr:'ग्रामपंचायतीशी संबंधित महत्त्वाच्या शासकीय योजनांची माहिती',
  schemes_intro_en:'Important government schemes relevant to the Gram Panchayat.'
 };
+
+// Screenshot-based reference portraits, DEMO ONLY. Titles are reference labels, not current-office verification.
+const referencePeople=[
+ ['leaders','minister-1','श्रीमती सुनेत्रा अजित पवार','Sunetra Ajit Pawar','माननीय उपमुख्यमंत्री','Deputy Chief Minister'],
+ ['leaders','minister-2','श्री. एकनाथ शिंदे','Eknath Shinde','माननीय उपमुख्यमंत्री','Deputy Chief Minister'],
+ ['leaders','minister-3','श्री. जयकुमार गोरे','Jaykumar Gore','माननीय मंत्री ग्रामविकास विभाग','Rural Development Minister'],
+ ['leaders','minister-4','श्री. योगेश कदम','Yogesh Kadam','माननीय राज्यमंत्री ग्रामविकास विभाग','Minister of State, Rural Development'],
+ ['leaders','minister-5','डॉ. चंद्रकांत पुलकुंडवार','Dr. Chandrakant Pulkundwar','माननीय प्रधान सचिव ग्रामविकास विभाग','Principal Secretary, Rural Development'],
+ ['officials','official-1','नमुना सरपंच','Sample Sarpanch','सरपंच','Sarpanch'],
+ ['officials','official-2','नमुना उपसरपंच','Sample Deputy Sarpanch','उपसरपंच','Deputy Sarpanch'],
+ ['officials','official-3','नमुना ग्रामपंचायत अधिकारी','Sample Panchayat Officer','ग्रामपंचायत अधिकारी','Gram Panchayat Officer']
+];
+for(let i=demoItems.length-1;i>=0;i--)if(['leaders','officials'].includes(demoItems[i].kind))demoItems.splice(i,1);
+for(const [kind,slug,mr,en,roleMr,roleEn] of referencePeople){
+ const item=sample(kind,slug,mr,en,reference+slug+'.webp');
+ item.subtitle_mr=roleMr;item.subtitle_en=roleEn;item.sort_order=demoItems.filter(x=>x.kind===kind).length;
+ if(kind==='officials')item.details={about_group:slug==='official-3'?'staff':'representatives'};
+ demoItems.push(item);
+}
+
+export const referenceLeaderCards=Object.freeze(demoItems.filter(x=>x.kind==='leaders').map(({slug,title_mr,title_en,subtitle_mr,subtitle_en,image_url,sort_order})=>Object.freeze({slug,title_mr,title_en,subtitle_mr,subtitle_en,image_url,sort_order})));

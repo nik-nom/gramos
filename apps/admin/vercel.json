@@ -1,0 +1,104 @@
+{
+  "version": 2,
+  "cleanUrls": false,
+  "trailingSlash": false,
+  "framework": null,
+  "buildCommand": null,
+  "outputDirectory": ".",
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/admin/login",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/robots.txt",
+      "destination": "/api/admin-robots"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/not-found"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin-shell.html"
+    },
+    {
+      "source": "/admin/:path*",
+      "destination": "/admin-shell.html"
+    },
+    {
+      "source": "/v/:slug/news/:article",
+      "destination": "/api/page?slug=:slug&page=news&article=:article"
+    },
+    {
+      "source": "/v/:slug/:page",
+      "destination": "/api/page?slug=:slug&page=:page"
+    },
+    {
+      "source": "/v/:slug",
+      "destination": "/api/page?slug=:slug"
+    },
+    {
+      "source": "/v/:path*",
+      "destination": "/api/not-found"
+    },
+    {
+      "source": "/demo",
+      "destination": "/admin-shell.html"
+    },
+    {
+      "source": "/demo/:path*",
+      "destination": "/admin-shell.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin"
+        },
+        {
+          "key": "X-Permitted-Cross-Domain-Policies",
+          "value": "none"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    }
+  ],
+  "functions": {
+    "api/page.js": {
+      "includeFiles": "index.html"
+    },
+    "api/admin-page.js": {
+      "includeFiles": "index.html"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import {readFile,access} from 'node:fs/promises';
+import {getDemo,referenceLeaderCards} from '../src/demo.js';
+import {renderShamvadiHomepage} from '../src/homepage.js';
+import {buildShamvadiVillage} from '../src/templates.js';
+const read=p=>readFile(new URL(p,import.meta.url),'utf8');
+globalThis.location={origin:'https://example.test',pathname:'/demo',search:''};
+const {village,items}=getDemo();
+assert.equal(referenceLeaderCards.length,5);
+for(const item of items.filter(x=>['leaders','officials'].includes(x.kind))){assert(item.image_url);for(const prefix of ['..','../apps/admin','../apps/public'])await access(new URL(prefix+item.image_url,import.meta.url));}
+const html=renderShamvadiHomepage(village,items,'mr',false);
+assert.match(html,/id="svLeaders"/);assert.equal((html.match(/sv-profile-page/g)||[]).length,2);assert.match(html,/profile-next/);assert.match(html,/schemeTab=individual/);assert.match(html,/schemeTab=public/);
+const real=buildShamvadiVillage({slug:'test-village',name_en:'Test'});const empty=renderShamvadiHomepage(real,[],'en',false);assert(!empty.includes('minister-1.webp'));assert(!empty.includes('official-1.webp'));
+const adm=JSON.parse(await read('../apps/admin/vercel.json')),pub=JSON.parse(await read('../apps/public/vercel.json'));
+assert.equal(adm.framework,null);assert.equal(adm.outputDirectory,'.');assert.equal(adm.cleanUrls,false);
+for(const route of ['/admin','/admin/:path*','/demo','/demo/:path*'])assert(adm.rewrites.some(r=>r.source===route&&r.destination==='/admin-shell.html'));
+assert.equal(await read('../apps/admin/admin-shell.html'),await read('../apps/admin/index.html'));
+assert(pub.rewrites.some(r=>r.source==='/admin/:path*'&&r.destination==='/api/not-found'));
+assert(pub.rewrites.some(r=>r.source==='/demo/:path*'&&r.destination==='/api/not-found'));
+assert.match(await read('../src/admin.js'),/referenceLeaderCards/);assert.match(await read('../src/admin.js'),/Use reference photo/);
+console.log('PASS v6.5: reference images, 5 minister records, grouped carousel, scheme links, no reference people on unrelated villages, static admin and demo routing, isolated public routes.');
