@@ -1,6 +1,6 @@
 {
   "name": "gramos-shamvadi",
-  "version": "6.3.0",
+  "version": "6.4.0",
   "private": true,
   "type": "module",
   "description": "GramOS v6 \u2014 simplified admin editor and citizen forms inbox",
