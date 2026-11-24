@@ -6,7 +6,7 @@ Updates the **existing V9 Node.js project**. Do not create another repository or
 Based on the screenshots supplied in this chat. The public source About route `https://shamvadi.gpweb.in/about.php` returned HTTP 406 to automated browsing, so do not claim source-code equivalence or pixel-perfect identity. We reproduced the visible layout and preserved the blue Shamvadi navbar/ticker/footer.
 
 ## What changed
-- **All Information now includes the complete sequential page**: village details, vision and values, office bearers, staff, committees, facilities, and duties, just like the supplied Shamvadi screenshots. Separate tabs show these sections individually.
+- **All Information now includes the complete sequential page**: village details, vision and values, office bearers, staff, committees, facilities, and duties, just like the supplied Shamvadi screenshots. Separate tabs show these sections individually. 
 - Six familiar About tabs are preserved and remain editable in site settings.
 - Village facts have separate Marathi and English values; two-column layout.
 - Committee sections can be created separately from members, including empty tables.
