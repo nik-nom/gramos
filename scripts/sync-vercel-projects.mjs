@@ -120,10 +120,18 @@ const imageUpload=async()=>false;
 const documentUpload=async()=>false;
 const excelUpload=async()=>false;`);
   await writeFile(join(app,'src','main.js'),main);
+  const csvImport="import {previewCSV} from './admin-experience.js';";
+  if(!main.includes(csvImport))throw new Error('CSV UI import changed; verify public build.');
+  main=main.replace(csvImport, 'const previewCSV=async()=>false;');
+  await writeFile(join(app,'src','main.js'),main);
+  await rm(join(app,'src','admin-experience.js'));
+  await rm(join(app,'src','admin-csv.mjs'));
   await rm(join(app,'src','admin.js'));
+  await rm(join(app,'src','client-admin.js'));
+  await rm(join(app,'src','client-export.mjs'));
   await writeFile(join(app,'api','not-found.js'),noFound);
  }else{
-  for(const file of ['domain-admin.js','attachment.js','beneficiary-file.js'])await cp(join(root,'api',file),join(app,'api',file));
+  for(const file of ['domain-admin.js','staff-admin.js','attachment.js','beneficiary-file.js'])await cp(join(root,'api',file),join(app,'api',file));
   await writeFile(join(app,'api','not-found.js'),noFound);
   await writeFile(join(app,'api','admin-robots.js'),adminRobots);
   await writeFile(join(app,'api','admin-page.js'),adminPage);
@@ -137,6 +145,6 @@ const excelUpload=async()=>false;`);
   functions:target==='public'?{'api/page.js':{includeFiles:'page-template.html'}}:{'api/page.js':{includeFiles:'index.html'},'api/admin-page.js':{includeFiles:'index.html'}}
  };
  await writeFile(join(app,'vercel.json'),JSON.stringify(config,null,2)+'\n');
- await writeFile(join(app,'package.json'),JSON.stringify({name:`gramos-${target}`,version:'4.7.2',private:true,type:'module'},null,2)+'\n');
+ await writeFile(join(app,'package.json'),JSON.stringify({name:`gramos-${target}`,version:'5.0.0',private:true,type:'module'},null,2)+'\n');
 }
 console.log('Split generated: apps/public and apps/admin. Commit both folders.');

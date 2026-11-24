@@ -6,6 +6,7 @@ const tr=(l,m,e)=>l==='mr'?m:e;
 const fld=(key,label,value='',type='text',required=false)=>`<label class="field"><span>${esc(label)}</span><input name="${esc(key)}" type="${esc(type)}" value="${esc(value||'')}" ${required?'required':''} autocomplete="off" maxlength="${type==='email'?254:170}"/></label>`;
 const payment=(value)=>`<label class="field"><span>Payment received? / पेमेंट मिळाले?</span><select name="payment_received"><option value="" ${value==null?'selected':''}>Not recorded / अजून नोंद नाही</option><option value="true" ${value===true?'selected':''}>Yes / होय</option><option value="false" ${value===false?'selected':''}>No / नाही</option></select></label>`;
 export async function fetchClientRows(role){
+ if(!role.admin)throw new Error('Only Super Admin can view customer and payment records.');
  const villages=await adminVillages(role);
  if(!villages.length)return [];
  const ids=villages.map(v=>v.id);
@@ -35,7 +36,7 @@ export async function clientsPage(lang,role){
  const v=chosen?.village;const r=chosen?.record||{};
  return `<main class="admin-shell container admin-v49-workspace"><div class="admin-page-top"><div><p class="eyebrow">CUSTOMERS / REGISTER</p><h1>${tr(lang,'ग्राहक नोंदवही','Customer register')}</h1><p>${tr(lang,'प्रत्येक ग्रामपंचायत एक नोंद. Excel/CSV मध्ये सर्व ग्राहकांची अद्ययावत यादी डाउनलोड करा.','One record per village. Download an up-to-date Excel or CSV register, including every customer.')}</p></div><a class="button-lite" href="/admin">← Dashboard</a></div>
  <section class="admin-panel admin-v49-collection"><div class="panel-heading"><h2>${tr(lang,'नोंदवही','Client records')} (${rows.length})</h2><div class="admin-v49-tools"><button type="button" class="button-lite" data-action="export-clients-csv">Download CSV</button><button type="button" class="btn btn-dark" data-action="export-clients-xlsx">Download Excel</button></div></div>
- <div class="admin-v49-table-wrap"><table class="admin-v49-table"><thead><tr><th>Village</th><th>Contact</th><th>Website</th><th>Payment</th><th>Action</th></tr></thead><tbody>${rows.map(({village:x,record:y,domain:z})=>`<tr><td><strong>${esc(loc(x,'name',lang)||x.slug)}</strong><small>/v/${esc(x.slug)}</small><a href="https://${esc(z?.hostname||'gramos-public.vercel.app')}/v/${encodeURIComponent(x.slug)}" target="_blank" rel="noopener noreferrer">${x.status==='published'?'Live website':'Website route'} ↗</a></td><td>${esc(y.customer_name||'Not entered')}<small>${esc(y.customer_email||'')}</small></td><td><span class="status status-${esc(x.status)}">${esc(x.status)}</span></td><td>${y.payment_received===true?'Received':y.payment_received===false?'Not received':'Not recorded'}</td><td><a class="button-lite" href="/admin/clients?site=${encodeURIComponent(x.id)}">Edit</a></td></tr>`).join('')}</tbody></table></div></section>
+ <div class="admin-v49-table-wrap"><table class="admin-v49-table"><thead><tr><th>Village</th><th>Contact</th><th>Website</th><th>Payment</th><th>Action</th></tr></thead><tbody>${rows.map(({village:x,record:y,domain:z})=>`<tr><td><strong>${esc(loc(x,'name',lang)||x.slug)}</strong><small>/v/${esc(x.slug)}</small>${x.status==='published'?`<a href="https://${esc(z?.hostname||'gramos-public.vercel.app')}/v/${encodeURIComponent(x.slug)}" target="_blank" rel="noopener noreferrer">Live website ↗</a>`:'<span class="small-muted">Unpublished — not public</span>'}</td><td>${esc(y.customer_name||'Not entered')}<small>${esc(y.customer_email||'')}</small></td><td><span class="status status-${esc(x.status)}">${esc(x.status)}</span></td><td>${y.payment_received===true?'Received':y.payment_received===false?'Not received':'Not recorded'}</td><td><a class="button-lite" href="/admin/clients?site=${encodeURIComponent(x.id)}">Edit</a></td></tr>`).join('')}</tbody></table></div></section>
  ${v?`<section class="admin-panel form-panel"><div class="panel-heading"><div><h2>${tr(lang,'ग्राहक नोंद संपादित करा','Edit customer record')}: ${esc(loc(v,'name',lang)||v.slug)}</h2><p>Village /v/${esc(v.slug)} · ${esc(v.status)} · <a href="/admin/villages/${esc(v.id)}/overview">Website publishing ↗</a></p></div></div><form id="clientRecordForm" data-id="${esc(v.id)}"><div class="form-grid">
  ${fld('customer_name','Customer / contact person',r.customer_name||'','text',true)}${fld('customer_email','Email address',r.customer_email||'','email',true)}
  ${fld('customer_phone','Mobile number',r.customer_phone||'','tel',true)}${fld('gram_sevak_name','Gram Sevak / officer name',r.gram_sevak_name||'')}
@@ -72,7 +73,7 @@ export async function createVillageWithClient(form,role){
 }
 export async function saveClientRecord(form,role){
  const d=new FormData(form),get=k=>String(d.get(k)||'').trim();const village_id=form.dataset.id;
- if(!role.admin&&!role.editorIds?.includes(village_id))throw new Error('Not permitted to edit this village');
+ if(!role.admin)throw new Error('Only Super Admin can edit customer and payment records.');
  for(const k of ['customer_name','customer_email','customer_phone'])if(!get(k))throw new Error(`Please enter ${k}`);
  const payload={village_id,...Object.fromEntries(['customer_name','customer_email','customer_phone','gram_sevak_name','panchayat_name','taluka','district','payment_notes'].map(k=>[k,get(k)])),payment_received:get('payment_received')===''?null:get('payment_received')==='true',updated_at:new Date().toISOString()};
  const rows=await call(api.from('village_clients').upsert(payload,{onConflict:'village_id'}).select('village_id'));
@@ -88,7 +89,7 @@ export async function createStaffLogin(form,role){
  return payload;
 }
 export async function exportClients(role,format){
- if(!role.admin&&!role.editorIds?.length)throw new Error('No access to customer register');
+ if(!role.admin)throw new Error('Only Super Admin can export customer data.');
  const rows=await fetchClientRows(role);
  const bytes=format==='xlsx'?clientsXLSX(rows):clientsCSV(rows);
  const type=format==='xlsx'?'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':'text/csv;charset=utf-8';

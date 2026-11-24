@@ -6,6 +6,7 @@ const tr=(l,m,e)=>l==='mr'?m:e;
 const fld=(key,label,value='',type='text',required=false)=>`<label class="field"><span>${esc(label)}</span><input name="${esc(key)}" type="${esc(type)}" value="${esc(value||'')}" ${required?'required':''} autocomplete="off" maxlength="${type==='email'?254:170}"/></label>`;
 const payment=(value)=>`<label class="field"><span>Payment received? / पेमेंट मिळाले?</span><select name="payment_received"><option value="" ${value==null?'selected':''}>Not recorded / अजून नोंद नाही</option><option value="true" ${value===true?'selected':''}>Yes / होय</option><option value="false" ${value===false?'selected':''}>No / नाही</option></select></label>`;
 export async function fetchClientRows(role){
+ if(!role.admin)throw new Error('Only Super Admin can view customer and payment records.');
  const villages=await adminVillages(role);
  if(!villages.length)return [];
  const ids=villages.map(v=>v.id);
@@ -72,7 +73,7 @@ export async function createVillageWithClient(form,role){
 }
 export async function saveClientRecord(form,role){
  const d=new FormData(form),get=k=>String(d.get(k)||'').trim();const village_id=form.dataset.id;
- if(!role.admin&&!role.editorIds?.includes(village_id))throw new Error('Not permitted to edit this village');
+ if(!role.admin)throw new Error('Only Super Admin can edit customer and payment records.');
  for(const k of ['customer_name','customer_email','customer_phone'])if(!get(k))throw new Error(`Please enter ${k}`);
  const payload={village_id,...Object.fromEntries(['customer_name','customer_email','customer_phone','gram_sevak_name','panchayat_name','taluka','district','payment_notes'].map(k=>[k,get(k)])),payment_received:get('payment_received')===''?null:get('payment_received')==='true',updated_at:new Date().toISOString()};
  const rows=await call(api.from('village_clients').upsert(payload,{onConflict:'village_id'}).select('village_id'));
@@ -88,7 +89,7 @@ export async function createStaffLogin(form,role){
  return payload;
 }
 export async function exportClients(role,format){
- if(!role.admin&&!role.editorIds?.length)throw new Error('No access to customer register');
+ if(!role.admin)throw new Error('Only Super Admin can export customer data.');
  const rows=await fetchClientRows(role);
  const bytes=format==='xlsx'?clientsXLSX(rows):clientsCSV(rows);
  const type=format==='xlsx'?'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':'text/csv;charset=utf-8';

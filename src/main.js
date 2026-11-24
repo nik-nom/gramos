@@ -1,6 +1,7 @@
 import {api,accessRole,getSession} from './data.js';
 import {renderPublic} from './public.js';
 import {renderAdmin,submitAdminForm,adminAction,imageUpload,documentUpload,excelUpload} from './admin.js';
+import {previewCSV} from './admin-experience.js';
 import {esc,notif} from './utils.js';
 
 const app=document.getElementById('app');
@@ -103,6 +104,18 @@ async function render(){
    if(run!==pendingRender)return;
    document.documentElement.lang=currentRoute[0]==='admin'?lang:'mr';
    app.innerHTML=html;
+   if(currentRoute[0]==='admin'){
+     const forms=['seoSettingsForm','contactSettingsForm','newsSettingsForm','gallerySettingsForm','aboutSettingsForm','serviceSettingsForm','schemeSettingsForm','beneficiarySettingsForm','noticeSettingsForm','projectSettingsForm'];
+     for(const id of forms){
+       const form=document.getElementById(id),publish=form?.querySelector('button[type="submit"]');
+       if(!publish||form.querySelector('[data-save-mode="draft"]'))continue;
+       publish.dataset.saveMode='publish';
+       publish.textContent=lang==='mr'?'जतन करा व वेबसाइटवर दाखवा':'Save and show on website';
+       const draft=document.createElement('button');draft.type='submit';draft.className='button-lite gx-draft-option';draft.dataset.saveMode='draft';
+       draft.textContent=lang==='mr'?'मसुदा जतन करा':'Save draft';
+       publish.insertAdjacentElement('beforebegin',draft);
+     }
+   }
    enablePublicReadMore();
    startCarousels();
    startReveals();
@@ -253,7 +266,9 @@ app.addEventListener('input',e=>{
 });
 
 app.addEventListener('change',async e=>{
- if(e.target.matches('input[data-image-input]')){
+ if(e.target.matches('input[data-gx-csv-input]')){
+   try{await previewCSV(e.target);}catch(error){notif(error.message||'CSV could not be opened',true);}
+ }else if(e.target.matches('input[data-image-input]')){
    try{await imageUpload(e.target);}catch(error){notif(error.message||'Upload failed',true);}
  }else if(e.target.matches('input[data-excel-input]')){
    try{await excelUpload(e.target);}catch(error){notif(error.message||'Excel upload failed',true);}
@@ -264,24 +279,23 @@ app.addEventListener('change',async e=>{
 
 app.addEventListener('submit',async e=>{
  const form=e.target;
- if(!['domainForm','grantSuperAdminForm','navbarBrandingForm','homeForm','footerForm','seoSettingsForm','contactSettingsForm','loginForm','settingsForm','aboutSettingsForm','serviceSettingsForm','projectSettingsForm','schemeSettingsForm','noticeSettingsForm','newsSettingsForm','gallerySettingsForm','createVillageForm','contentForm','staffAccessForm','visitorForm'].includes(form.id))return;
+ if(!['domainForm','grantSuperAdminForm','navbarBrandingForm','homeForm','footerForm','seoSettingsForm','contactSettingsForm','loginForm','recoverPasswordForm','setPasswordForm','settingsForm','aboutSettingsForm','serviceSettingsForm','projectSettingsForm','schemeSettingsForm','noticeSettingsForm','newsSettingsForm','gallerySettingsForm','createVillageForm','createStaffLoginForm','clientRecordForm','contentForm','staffAccessForm','visitorForm'].includes(form.id))return;
  e.preventDefault();
- const button=form.querySelector('[type="submit"]');if(button?.disabled)return;
+ const button=e.submitter||form.querySelector('[type="submit"]');if(button?.disabled)return;
  form.dataset.saveMode=e.submitter?.dataset.saveMode||'publish';
- if(button)button.disabled=true;
+ const submitButtons=[...form.querySelectorAll('[type="submit"]')];submitButtons.forEach(x=>x.disabled=true);
  try{
    if(form.id==='visitorForm')await sendSubmission(form);
    else await submitAdminForm(form,currentRoute,role,navigate,render);
  }catch(error){notif(error?.message||'Something went wrong',true);}
- finally{if(button?.isConnected)button.disabled=false;}
+ finally{submitButtons.forEach(x=>{if(x.isConnected)x.disabled=false;});}
 });
 
 function fileAsBase64(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(new Error('Cannot read attachment'));reader.onload=()=>resolve(String(reader.result).split(',')[1]||'');reader.readAsDataURL(file);});}
 async function sendSubmission(form){
  const config=window.GRAMOS_CONFIG||{};
- if(!config.turnstileSiteKey)throw new Error('Visitor form has not been enabled by the administrator.');
- const token=window.turnstile?.getResponse?.()||'';
- if(!token)throw new Error('Complete the security verification before submitting.');
+ // Normal form: a server-side rate limiter and honeypot protect submissions without a CAPTCHA.
+ const token='';
  const fd=new FormData(form), attachment=fd.get('attachment');
  let data=null;
  if(attachment instanceof File && attachment.size){

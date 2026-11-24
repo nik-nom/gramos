@@ -18,8 +18,8 @@ export async function call(q) { const {data,error} = await q; if (error) throw n
 export async function publishedVillages() { return api ? call(api.from('villages').select('id,slug,name_en,name_mr,district_en,district_mr,status').eq('status','published').order('name_en')) : []; }
 export async function villageBySlug(slug) { if (!api) return null; return await call(api.from('villages').select('*').eq('slug',slug).maybeSingle()); }
 export async function villageById(id) { if (!api) return null; return await call(api.from('villages').select('*').eq('id',id).maybeSingle()); }
-export async function itemsFor(id) { return api ? call(api.from('content_items').select('*').eq('village_id',id).order('sort_order',{ascending:true}).order('created_at',{ascending:false})) : []; }
-export async function publishedItemsFor(id) { return api ? call(api.from('content_items').select('*').eq('village_id',id).eq('status','published').order('sort_order',{ascending:true}).order('created_at',{ascending:false})) : []; }
+export async function itemsFor(id) { return api ? (await call(api.from('content_items').select('*').eq('village_id',id).order('sort_order',{ascending:true}).order('created_at',{ascending:false}))).filter(x=>!x.deleted_at) : []; }
+export async function publishedItemsFor(id) { return api ? (await call(api.from('content_items').select('*').eq('village_id',id).eq('status','published').order('sort_order',{ascending:true}).order('created_at',{ascending:false}))).filter(x=>!x.deleted_at) : []; }
 export async function getSession() { return (await api?.auth.getSession())?.data?.session || null; }
 export async function accessRole(userId) {
   if (!api || !userId) return {admin:false,ids:[],editorIds:[],reviewerIds:[]};

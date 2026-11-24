@@ -1,3 +1,9 @@
+# GramOS v5 (Admin Upgrade)
+
+**Start here:** [GRAMOS_V5_START_HERE.md](GRAMOS_V5_START_HERE.md)
+
+---
+
 # GramOS v4.7 — navbar and footer update
 
 See **V4.7_START_HERE.md** for installation and changes. This preserves all v4.6 public pages and PDFs.
