@@ -1,20 +1,20 @@
-import {SEO_PAGES,SEO_LABELS,resolveSEO,clearPublicMetadata} from './seo.js';
-import {esc,loc,slugify,icon,formatDate,notif,imageURL} from './utils.js';
-import {api,configured,call,adminVillages,villageById,itemsFor,uploadPublicImage,getSiteDraft,saveSiteDraft,publishSiteDraft,discardSiteDraft,withVillageDraft} from './data.js';
+import {SEO_PAGES,SEO_LABELS,resolveSEO,clearPublicMetadata} from './seo.js?v=6.9.2';
+import {esc,loc,slugify,icon,formatDate,notif,imageURL} from './utils.js?v=6.9.2';
+import {api,configured,call,adminVillages,villageById,itemsFor,uploadPublicImage,getSiteDraft,saveSiteDraft,publishSiteDraft,discardSiteDraft,withVillageDraft} from './data.js?v=6.9.2';
 
-import {buildShamvadiVillage, SHAMVADI_TEMPLATE_LABEL} from './templates.js';
-import {FIXED_DUTIES,FIXED_MISSION_MR,FIXED_VALUES_MR} from './about-reference.js';
-import {referenceServices,referenceSteps,referenceForms,referenceLinks,referenceFormsPaths,canonicalFormURL} from './services-reference.js';
-import {referenceSchemes} from './schemes-reference.js';
-import {referenceRTI} from './notices-reference.js';
-import {officialSlots,slideSlots,gallerySlots,missingMediaSlots} from './media-slots.js';
-import {referenceLeaderCards} from './demo.js';
-import {SOCIAL_FIELDS,validateSocialSettings} from './social.js';
-import {platformLegalNotice} from './branding.js';
-import {PAGE_TARGETS,ELEMENT_TYPES} from './page-elements.js';
-import {newVillagePage,clientsPage,staffPage,createVillageWithClient,saveClientRecord,createStaffLogin,exportClients} from './client-admin.js';
-import {recentAdminActivity,csvImportPage,downloadCSVTemplate,commitCSVImport} from './admin-experience.js';
-import {CSV_KINDS} from './admin-csv.mjs';
+import {buildShamvadiVillage, SHAMVADI_TEMPLATE_LABEL} from './templates.js?v=6.9.2';
+import {FIXED_DUTIES,FIXED_MISSION_MR,FIXED_VALUES_MR} from './about-reference.js?v=6.9.2';
+import {referenceServices,referenceSteps,referenceForms,referenceLinks,referenceFormsPaths,canonicalFormURL} from './services-reference.js?v=6.9.2';
+import {referenceSchemes} from './schemes-reference.js?v=6.9.2';
+import {referenceRTI} from './notices-reference.js?v=6.9.2';
+import {officialSlots,slideSlots,gallerySlots,missingMediaSlots} from './media-slots.js?v=6.9.2';
+import {referenceLeaderCards} from './demo.js?v=6.9.2';
+import {SOCIAL_FIELDS,validateSocialSettings} from './social.js?v=6.9.2';
+import {platformLegalNotice} from './branding.js?v=6.9.2';
+import {PAGE_TARGETS,ELEMENT_TYPES} from './page-elements.js?v=6.9.2';
+import {newVillagePage,clientsPage,staffPage,createVillageWithClient,saveClientRecord,createStaffLogin,exportClients} from './client-admin.js?v=6.9.2';
+import {recentAdminActivity,csvImportPage,downloadCSVTemplate,commitCSVImport} from './admin-experience.js?v=6.9.2';
+import {CSV_KINDS} from './admin-csv.mjs?v=6.9.2';
 
 const csvControls=(v,kind,lang,trash)=>`<details class="gx62-list-menu"><summary>${tr(lang,'अधिक पर्याय','More options')}</summary><span class="gx-list-controls">${CSV_KINDS.includes(kind)?`<a class="button-lite" href="/admin/villages/${esc(v.id)}/import/${kind}">+ ${tr(lang,'CSV आयात','Import CSV')}</a>`:''}<a class="button-lite" href="/admin/villages/${esc(v.id)}/content/${kind}${trash?'':'?trash=1'}">${trash?tr(lang,'सामान्य यादी','Active list'):tr(lang,'काढलेल्या नोंदी','Restore items')}</a></span></details>`;
 const itemControls=(v,i,kind,lang,trash)=>trash?`<span class="status status-draft">${tr(lang,'काढले','Removed')}</span><button class="button-lite" data-action="restore-item" data-id="${esc(i.id)}">${tr(lang,'परत आणा','Restore draft')}</button>`:`${pill(i.status)}<a class="button-lite gx6-edit-button" href="/admin/villages/${esc(v.id)}/content/${kind}?edit=${esc(i.id)}" title="Edit">${tr(lang,'संपादन','Edit')}</a><details class="gx62-row-menu"><summary>${tr(lang,'अधिक','More')}</summary><button data-action="item-status" data-id="${esc(i.id)}" data-next="${i.status==='published'?'draft':'published'}">${i.status==='published'?tr(lang,'मसुदा','Draft'):tr(lang,'प्रकाशित','Publish')}</button><button class="danger-text" data-action="delete-item" data-id="${esc(i.id)}">${tr(lang,'काढा','Remove')}</button></details>`;
@@ -27,7 +27,7 @@ const pill=s=>`<span class="status status-${esc(s)}">${esc(s)}</span>`;
 const field=(name,title,value='',opts={})=>`<label class="field ${opts.wide?'wide':''}"><span>${title}</span>${opts.textarea?`<textarea rows="${opts.rows||4}" name="${name}" ${opts.required?'required':''}>${esc(value)}</textarea>`:`<input name="${name}" type="${opts.type||'text'}" ${opts.required?'required':''} ${opts.readonly?'readonly':''} value="${esc(value)}" placeholder="${esc(opts.placeholder||'')}"/>`}</label>`;
 const back=(url,title)=>`<a class="backlink" href="${url}">← ${title}</a>`;
 const adminSetupGuide=()=>`<div class="admin-guide"><h3>First-time access / प्रथम प्रवेश</h3><p>There is no default admin password. A project owner must invite a Super Admin through Supabase Auth and assign their database role. See <code>ADMIN_AUDIT_v491.md</code> and the one-time <code>scripts/invite-superadmin.mjs</code> setup tool. Never paste private API keys or passwords into a chat or GitHub.</p><p>If you already have an account, use the password-recovery link above.</p></div>`;
-const unavailable=()=>`<div class="admin-setup"><img src="/assets/gp-mark.svg" alt=""/><h1>Connect Supabase first</h1><p>Your frontend is loading correctly. To enable the admin dashboard, create the new Supabase project, run <code>database/01_setup.sql</code>, then add the URL and publishable key to <code>config.js</code>. See <code>START_HERE.md</code>.</p><a class="btn btn-dark" href="/demo">Explore the working public demo ${icon('arrow')}</a></div>`;
+const unavailable=()=>`<div class="admin-setup"><img src="/assets/gp-mark.svg" alt=""/><h1>Database connection unavailable</h1><p>The admin code loaded, but the Supabase browser connection is unavailable. Check your internet connection, the SDK request and your existing <code>config.js</code> public configuration. Do not create a new database or reset your existing account.</p><button type="button" data-action="retry-startup" class="btn btn-dark">Retry</button> <a class="button-lite" href="/demo">Explore the public demo ${icon('arrow')}</a></div>`;
 
 export async function renderAdmin(route,lang,role,user){
  clearPublicMetadata(true);
@@ -932,7 +932,7 @@ export async function adminAction(button,route,role,navigate,rerender){
 export async function documentUpload(input){
  const file=input.files?.[0];if(!file)return;
  input.disabled=true;
- try{const {uploadPublicDocument}=await import('./data.js');const url=await uploadPublicDocument(file,input.dataset.village);const target=input.closest('form')?.querySelector(`[name="${input.dataset.target}"]`);if(!target)throw new Error('PDF uploaded but download field was not found; copy the returned link before leaving.');target.value=url;notif('PDF uploaded. Save and publish the form item to show the download on the website.');}
+ try{const {uploadPublicDocument}=await import('./data.js?v=6.9.2');const url=await uploadPublicDocument(file,input.dataset.village);const target=input.closest('form')?.querySelector(`[name="${input.dataset.target}"]`);if(!target)throw new Error('PDF uploaded but download field was not found; copy the returned link before leaving.');target.value=url;notif('PDF uploaded. Save and publish the form item to show the download on the website.');}
  finally{input.disabled=false;}
 }
 export async function imageUpload(input){
@@ -946,7 +946,7 @@ export async function excelUpload(input){
  const file=input.files?.[0];if(!file)return;
  input.disabled=true;
  try{
-  const {uploadBeneficiaryWorkbook}=await import('./data.js');
+  const {uploadBeneficiaryWorkbook}=await import('./data.js?v=6.9.2');
   const path=await uploadBeneficiaryWorkbook(file,input.dataset.village);
   const target=input.closest('form')?.querySelector('[name="file_path"]');
   if(!target)throw new Error('Workbook uploaded but its record field was not found.');

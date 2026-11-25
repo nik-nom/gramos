@@ -2,8 +2,8 @@
  * Screenshot-matched template cards + the user's unaltered V Swaraj PDF forms.
  * Existing published per-village content overrides cards with the same slug.
  */
-import {esc,loc,safeLink,safePdfURL,imageURL} from './utils.js';
-import {mergeReferenceRows,referenceFormsPaths} from './services-reference.js';
+import {esc,loc,safeLink,safePdfURL,imageURL} from './utils.js?v=6.9.2';
+import {mergeReferenceRows,referenceFormsPaths,canonicalFormURL} from './services-reference.js?v=6.9.2';
 const tr=(l,m,e)=>l==='mr'?m:e;
 const setting=(v,key,l)=>String(v.site_settings?.[`${key}_${l}`]||v.site_settings?.[`${key}_${l==='mr'?'en':'mr'}`]||'');
 const metadata=(entry,key,l)=>String(entry.details?.[`${key}_${l}`]||entry.details?.[`${key}_${l==='mr'?'en':'mr'}`]||'');
@@ -32,7 +32,7 @@ function available(v,items,l,prefix,preview=false){
     ${loc(x,'body',l)?`<p>${esc(loc(x,'body',l))}</p>`:''}
     ${required?`<div class="sv-l-detail"><h4>${esc(cfg(v,'services_documents_label',l,'आवश्यक कागदपत्रे','Required documents'))}:</h4>${bullets(required)}</div>`:''}
     ${process?`<div class="sv-l-detail"><h4>${esc(cfg(v,'services_process_label',l,'प्रक्रिया','Procedure'))}:</h4>${bullets(process)}</div>`:''}
-    ${safeLink(x.external_url)?`<a class="sv-l-service-pdf" href="${esc(safeLink(x.external_url))}" target="_blank" rel="noopener noreferrer">${tr(l,'संबंधित दुवा उघडा','Open related link')} ↗</a>`:''}
+    ${pdfURL(x.external_url)?`<a class="sv-l-service-pdf" href="${esc(pdfURL(x.external_url))}" download="${esc(loc(x,'title',l))}.pdf" target="_blank" rel="noopener noreferrer">Download PDF</a>`:safeLink(x.external_url)?`<a class="sv-l-service-pdf" href="${esc(safeLink(x.external_url))}" target="_blank" rel="noopener noreferrer">${tr(l,'संबंधित दुवा उघडा','Open related link')} ↗</a>`:''}
     ${(fee||duration)?`<div class="sv-l-chips">${fee?`<span><b>${esc(cfg(v,'services_fee_label',l,'शुल्क','Fee'))}:</b> ${esc(fee)}</span>`:''}${duration?`<span><b>${esc(cfg(v,'services_time_label',l,'वेळ','Time'))}:</b> ${esc(duration)}</span>`:''}</div>`:''}
    </article>`;
  }).join('')}</div></section>`;
@@ -44,6 +44,7 @@ function steps(v,items,l,preview=false){
  </section>`;
 }
 const pdfURL=url=>{
+ url=canonicalFormURL(url);
  if(referenceFormsPaths.has(url))return url; // fixed same-origin, bundled immutable PDF files
  return safePdfURL(url); // uploaded village PDF must be HTTPS and end with .pdf
 };
@@ -52,8 +53,8 @@ function forms(v,items,l,preview=false){
  return `<section class="sv-l-section sv-l-forms"><h2>${esc(tabTitle(v,'forms',l))}</h2>
  <div class="sv-l-form-grid">${list.map(x=>{const url=pdfURL(x.external_url),builtin=referenceFormsPaths.has(url);
  return `<article class="sv-l-download"><h3>${esc(loc(x,'title',l))}</h3>
- ${!x.template_default&&loc(x,'body',l)?`<p>${esc(loc(x,'body',l))}</p>`:''}
- ${url?`<div class="sv-l-form-actions"><a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${tr(l,'PDF पहा','View PDF')} ↗</a><a href="${esc(url)}" ${builtin?'download':''} ${builtin?'':'target="_blank" rel="noopener noreferrer"'} aria-label="${esc(loc(x,'title',l))} — ${tr(l,'PDF डाउनलोड करा','Download PDF')}">${tr(l,'डाउनलोड करा','Download')}</a></div>`:`<span class="sv-l-download-unavailable">${tr(l,'दस्तऐवज अद्याप जोडलेला नाही','Document not uploaded')}</span>`}
+ ${loc(x,'body',l)&&(!x.template_default||['employment-registration','building-permission','monthly-report-template'].includes(x.slug))?`<p>${esc(loc(x,'body',l))}</p>`:''}
+ ${url?`<a class="sv69-download" href="${esc(url)}" download="${esc(loc(x,'title',l))}.pdf" ${builtin?'':'target="_blank" rel="noopener noreferrer"'} aria-label="Download PDF — ${esc(loc(x,'title',l))}">Download PDF</a>`:`<span class="sv-l-download-unavailable">${tr(l,'दस्तऐवज अद्याप जोडलेला नाही','Document not uploaded')}</span>`}
  </article>`;}).join('')}</div></section>`;
 }
 function citizenLinks(v,items,l,preview=false){
@@ -86,7 +87,7 @@ export function renderServicesPage(v,items,l,preview=false){
  const activeParam=new URLSearchParams(location.search||'').get('serviceTab');
  const active=tabs.some(x=>x[0]===activeParam)?activeParam:'all';
  const sections={available:available(v,sourceItems,l,'services-only',preview),steps:steps(v,sourceItems,l,preview),forms:forms(v,sourceItems,l,preview),links:citizenLinks(v,sourceItems,l,preview),qr:qrPanel(v,l)};
- const combined=available(v,sourceItems,l,'services-all',preview)+sections.steps+sections.forms;
+ const combined=sections.forms+available(v,sourceItems,l,'services-all',preview)+sections.steps;
  return `<div class="sv-services-page"><header class="sv-l-intro sv-wrap"><h1>${esc(pageTitle)}</h1><p>${esc(intro)}</p>
  <div class="sv-l-tabs" role="tablist" aria-label="${esc(pageTitle)}">${tabs.map(([id])=>`<button class="sv-l-tab ${id===active?'active':''}" id="services-tab-${id}" type="button" role="tab" data-action="service-tab" data-tab="${id}" aria-controls="services-panel-${id}" aria-selected="${id===active}" tabindex="${id===active?'0':'-1'}">${esc(tabTitle(v,id,l))}</button>`).join('')}</div></header>
  <div class="sv-wrap sv-l-content">${tabs.map(([id])=>`<section id="services-panel-${id}" class="sv-service-tabpanel" role="tabpanel" aria-labelledby="services-tab-${id}" ${id===active?'':'hidden'}>${id==='all'?combined:sections[id]}</section>`).join('')}</div></div>`;

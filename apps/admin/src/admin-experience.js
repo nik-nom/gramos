@@ -1,6 +1,6 @@
-import {api,call} from './data.js';
-import {esc,icon,formatDate} from './utils.js';
-import {CSV_KINDS,CSV_FIELDS,csvTemplate,parseCSV,generateCSV,validateCSVRows,rowsForInsert} from './admin-csv.mjs';
+import {api,call} from './data.js?v=6.9.2';
+import {esc,icon,formatDate} from './utils.js?v=6.9.2';
+import {CSV_KINDS,CSV_FIELDS,csvTemplate,parseCSV,generateCSV,validateCSVRows,rowsForInsert} from './admin-csv.mjs?v=6.9.2';
 
 const t=(language,mr,en)=>language==='mr'?mr:en;
 export function villageQuickLinks(v,language){

@@ -1,4 +1,4 @@
-import {esc,loc,imageURL,safeLink} from './utils.js';
+import {esc,loc,imageURL,safeLink} from './utils.js?v=6.9.2';
 export const PAGE_TARGETS=Object.freeze(['home','about','services','schemes','beneficiaries','projects','notices','news','gallery','contact','staff','leaders','facilities','pages']);
 export const ELEMENT_TYPES=Object.freeze(['text','heading','list','image','link','stat']);
 /** Safe HTML only; never allow an editor to inject arbitrary HTML or JS. */

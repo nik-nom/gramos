@@ -1,7 +1,7 @@
 /** GramOS v4.9 — one village per customer; records persist in Supabase, not in Vercel filesystem. */
-import {api,call,adminVillages} from './data.js';
-import {esc,loc,notif} from './utils.js';
-import {clientsCSV,clientsXLSX} from './client-export.mjs';
+import {api,call,adminVillages} from './data.js?v=6.9.2';
+import {esc,loc,notif} from './utils.js?v=6.9.2';
+import {clientsCSV,clientsXLSX} from './client-export.mjs?v=6.9.2';
 const tr=(l,m,e)=>l==='mr'?m:e;
 const fld=(key,label,value='',type='text',required=false)=>`<label class="field"><span>${esc(label)}</span><input name="${esc(key)}" type="${esc(type)}" value="${esc(value||'')}" ${required?'required':''} autocomplete="off" maxlength="${type==='email'?254:170}"/></label>`;
 const payment=(value)=>`<label class="field"><span>Payment received? / पेमेंट मिळाले?</span><select name="payment_received"><option value="" ${value==null?'selected':''}>Not recorded / अजून नोंद नाही</option><option value="true" ${value===true?'selected':''}>Yes / होय</option><option value="false" ${value===false?'selected':''}>No / नाही</option></select></label>`;

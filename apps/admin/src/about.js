@@ -3,8 +3,9 @@
  * Every village-specific fact, official, committee, facility and duty comes from
  * villages/site_settings or published content_items; no real village facts live here.
  */
-import {esc,loc,imageURL,safeLink} from './utils.js';
-import {FIXED_MISSION_MR,FIXED_MISSION_EN,FIXED_VALUES_MR,FIXED_VALUES_EN,FIXED_DUTIES} from './about-reference.js';
+import {esc,loc,imageURL,safeLink} from './utils.js?v=6.9.2';
+import {officialSlots,missingMediaSlots,portraitPlaceholder} from './media-slots.js?v=6.9.2';
+import {FIXED_MISSION_MR,FIXED_MISSION_EN,FIXED_VALUES_MR,FIXED_VALUES_EN,FIXED_DUTIES} from './about-reference.js?v=6.9.2';
 const tr=(l,m,e)=>l==='mr'?m:e;
 const cfg=(v,key,l)=>String(v.site_settings?.[`${key}_${l}`]||v.site_settings?.[`${key}_${l==='mr'?'en':'mr'}`]||'');
 const meta=(x,key,l)=>String(x?.details?.[`${key}_${l}`]||x?.details?.[`${key}_${l==='mr'?'en':'mr'}`]||'');
@@ -62,18 +63,16 @@ function renderExtra(v,items,l){
 function people(v,items,l,group){
  const candidates=all(items,'officials');
  const filtered=candidates.filter(x=>group==='staff'?x.details?.about_group==='staff':x.details?.about_group!=='staff');
- const placeholder=()=>`<article class="sv-a-person sv-a-person-placeholder"><img class="sv-a-avatar-placeholder" src="/assets/placeholders/portrait.svg" alt="" loading="lazy"><p class="sv-a-placeholder-label">${text(tr(l,'नाव अद्याप उपलब्ध नाही','Name not available'))}</p><p>${text(tr(l,'पद उपलब्ध नाही','Designation not available'))}</p></article>`;
+ const slots=missingMediaSlots(officialSlots.filter(x=>x.details.about_group===(group==='staff'?'staff':'representatives')),filtered);
+ const placeholder=(i=0)=>{const slot=slots[i];const sample=Boolean(slot?.sample_image);return `<article class="sv-a-person sv-a-person-placeholder"><img class="sv-a-avatar-placeholder" src="${portraitPlaceholder(slot,sample)}" alt="" loading="lazy"><h3>${text(sample?tr(l,'नमुना फोटो — प्रत्यक्ष पदाधिकारी नाही','Sample photo — not actual officeholder'):tr(l,'नाव अद्याप उपलब्ध नाही','Name not available'))}</h3><span class="sv-a-role">${text(loc(slot,'subtitle',l)||tr(l,'पद उपलब्ध नाही','Designation not available'))}</span></article>`;};
  return filtered.length?`<div class="sv-a-people-grid">${filtered.map(x=>{
    const role=loc(x,'subtitle',l),ward=meta(x,'ward',l),phone=x.details?.phone||'', date=x.details?.elected_date||'';
    return `<article class="sv-a-person">${photo(x.image_url,loc(x,'title',l))}<h3>${text(loc(x,'title',l))}</h3>${role?`<span class="sv-a-role">${text(role)}</span>`:''}
     ${ward?`<p>${text(title(v,'about_label_ward',l,'वॉर्ड क्र.','Ward'))}: ${text(ward)}</p>`:''}
     ${phone?`<p>☎ <a href="tel:${esc(String(phone).replace(/[^+0-9]/g,''))}">${text(phone)}</a></p>`:''}
     ${date?`<p>${text(title(v,'about_label_elected',l,'निवड','Appointed'))}: ${text(date)}</p>`:''}</article>`;
-  }).join('')}${Array.from({length:Math.max(0,3-filtered.length)},placeholder).join('')}</div>`:`<div class="sv-a-people-grid sv-a-people-grid-empty" aria-label="${tr(l,'अद्याप पदाधिकाऱ्यांची माहिती नाही','No officials published yet')}">
-    ${Array.from({length:3},(_,i)=>`<article class="sv-a-person sv-a-person-placeholder" >
-       <img class="sv-a-avatar-placeholder" src="/assets/placeholders/portrait.svg" alt="" loading="lazy">
-       <p class="sv-a-placeholder-label">${text(tr(l,'नाव अद्याप उपलब्ध नाही','Name not available'))}</p><p>${text(tr(l,'पद उपलब्ध नाही','Designation not available'))}</p>
-    </article>`).join('')}
+  }).join('')}${Array.from({length:Math.max(0,3-filtered.length)},(_,i)=>placeholder(i)).join('')}</div>`:`<div class="sv-a-people-grid sv-a-people-grid-empty" aria-label="${tr(l,'अद्याप पदाधिकाऱ्यांची माहिती नाही','No officials published yet')}">
+    ${Array.from({length:3},(_,i)=>placeholder(i)).join('')}
   </div>`;
 }
 function committeeTables(v,items,l){

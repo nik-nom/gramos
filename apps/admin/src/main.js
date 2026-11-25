@@ -1,11 +1,13 @@
-import {api,accessRole,getSession} from './data.js';
-import {renderPublic} from './public.js';
-import {renderAdmin,submitAdminForm,adminAction,imageUpload,documentUpload,excelUpload} from './admin.js';
-import {previewCSV} from './admin-experience.js';
-import {esc,notif} from './utils.js';
+import {api,accessRole,getSession} from './data.js?v=6.9.2';
+import {renderPublic} from './public.js?v=6.9.2';
+import {renderAdmin,submitAdminForm,adminAction,imageUpload,documentUpload,excelUpload} from './admin.js?v=6.9.2';
+import {previewCSV} from './admin-experience.js?v=6.9.2';
+import {esc,notif} from './utils.js?v=6.9.2';
 
 const app=document.getElementById('app');
-let lang=localStorage.getItem('gramos-language')==='en'?'en':'mr';
+const getLanguage=()=>{try{return localStorage.getItem('gramos-language')==='en'?'en':'mr';}catch{return 'mr';}};
+const saveLanguage=value=>{try{localStorage.setItem('gramos-language',value);}catch{}};
+let lang=getLanguage();
 let role={admin:false,ids:[],editorIds:[],reviewerIds:[]};
 let pendingRender=0;
 let inboxTimer=null;
@@ -88,22 +90,30 @@ function startReveals(){
  targets.forEach(el=>revealObserver.observe(el));
  host.classList.add('sv-motion-ready');
 }
+export function startupDeadline(task,label,ms){
+ let timer;return Promise.race([Promise.resolve(task),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+' timed out. Check your internet connection and try again.')),ms);})]).finally(()=>clearTimeout(timer));
+}
 const getRoute=()=>decodeURI(location.pathname).split('/').filter(Boolean);
 
 function navigate(url){if(!url)return;history.pushState({},'',url);window.scrollTo(0,0);render();}
 async function render(){
- const run=++pendingRender;currentRoute=getRoute();
+ const run=++pendingRender;
  clearInterval(inboxTimer);inboxTimer=null;
  app.innerHTML='<div class="initial-loading" role="status" aria-live="polite">Loading…</div>';
  try {
-   const session=api&&currentRoute[0]!=='demo'?await getSession():null;
+   currentRoute=getRoute();
+   window.GRAMOS_BOOT_STAGE='Checking session';
+   const session=api&&currentRoute[0]!=='demo'?await startupDeadline(getSession(), 'Session check', 12000):null;
    if(run!==pendingRender)return;
-   role=session?.user?await accessRole(session.user.id):{admin:false,ids:[]};
+   window.GRAMOS_BOOT_STAGE='Checking permissions';
+   role=session?.user?await startupDeadline(accessRole(session.user.id), 'Permission check', 15000):{admin:false,ids:[]};
    if(run!==pendingRender)return;
-   const html=currentRoute[0]==='admin'?await renderAdmin(currentRoute,lang,role,session?.user):await renderPublic(currentRoute,lang,role);
+   window.GRAMOS_BOOT_STAGE='Loading page data';
+   const html=await startupDeadline(currentRoute[0]==='admin'?renderAdmin(currentRoute,lang,role,session?.user):renderPublic(currentRoute,lang,role),'Page data', 20000);
    if(run!==pendingRender)return;
    document.documentElement.lang=currentRoute[0]==='admin'?lang:'mr';
    app.innerHTML=html;
+   window.GRAMOS_BOOT_STAGE='Rendering page';
    if(currentRoute[0]==='admin'){
      const content=app.querySelector('.admin-content');const heading=content?.querySelector('.admin-page-top');if(heading&&heading.parentElement===content)content.prepend(heading);
      // Move controls without cloning or disabling them: FormData and the upload handlers
@@ -137,7 +147,7 @@ async function render(){
      }
      const preview=app.querySelector('.admin-preview-wide');if(preview){const d=disclose(t('वेबसाइट पूर्वावलोकन','Website preview'));preview.before(d);d.append(preview);const frame=preview.querySelector('iframe');if(frame)frame.loading='lazy';}
      // Collapse redundant legacy reference links (all individual records remain in the main edit links).
-     if(new URLSearchParams(location.search).get('view')==='settings')for(const panel of content.querySelectorAll(':scope > section.admin-panel')){
+     if(new URLSearchParams(location.search).get('view')==='settings')for(const panel of content?.querySelectorAll(':scope > section.admin-panel')||[]){
        if(panel.matches('.gx6-page-tools,.admin-preview-wide')||panel.querySelector('form')||!panel.querySelector('.sv-about-admin-links'))continue;
        const d=disclose(panel.querySelector('h2')?.textContent||t('अधिक पर्याय','More options'));panel.before(d);d.append(panel);
      }
@@ -227,13 +237,14 @@ async function render(){
  }catch(error){
    if(run!==pendingRender)return;
    console.error('GramOS render failure:',error);
-   app.innerHTML=`<div class="error-screen"><img src="/assets/mark.svg" alt=""/><h1>Unable to load this page</h1><p>${esc(error?.message||'Unknown error')}</p><p>Your database connection may be unavailable. The public demo can still be viewed.</p><a class="btn btn-dark" href="/demo">Open demo</a> <a class="button-lite" href="/">Go home</a></div>`;
+   app.innerHTML=`<div class="error-screen"><img src="/assets/mark.svg" alt=""/><h1>Unable to load this page</h1><p>${esc(error?.message||'Unknown error')}</p><p>Your database connection may be unavailable. The public demo can still be viewed.</p><button type="button" class="btn btn-dark" data-action="retry-startup">Retry</button> <a class="button-lite" href="/admin/login">Admin login</a> <a class="button-lite" href="/demo">Open demo</a></div>`;
  }
 }
 
 app.addEventListener('click',async e=>{
  const actionButton=e.target.closest('[data-action]');
  if(actionButton){e.preventDefault();const action=actionButton.dataset.action;
+   if(action==='retry-startup'){location.reload();return;}
    if(action==='public-read-more'){const modal=document.getElementById('publicTextModal');const text=publicLongText.get(actionButton.dataset.id);if(modal&&text){document.getElementById('publicTextModalContent').textContent=text;modal.showModal();}return;}
    if(action==='public-more-close'){document.getElementById('publicTextModal')?.close();return;}
    if(action==='sv-top'){window.scrollTo({top:0,behavior:reducedMotion()?'auto':'smooth'});return;}
@@ -335,8 +346,8 @@ app.addEventListener('click',async e=>{
      startReveals();
      return;
    }
-   if(action==='set-nav-language'){const selected=actionButton.dataset.lang;if(!['mr','en'].includes(selected))return;lang=selected;localStorage.setItem('gramos-language',lang);render();return;}
-   if(action==='lang'){lang=lang==='mr'?'en':'mr';localStorage.setItem('gramos-language',lang);render();return;}
+   if(action==='set-nav-language'){const selected=actionButton.dataset.lang;if(!['mr','en'].includes(selected))return;lang=selected;saveLanguage(lang);render();return;}
+   if(action==='lang'){lang=lang==='mr'?'en':'mr';saveLanguage(lang);render();return;}
    try{actionButton.disabled=true;await adminAction(actionButton,currentRoute,role,navigate,render);}
    catch(error){notif(error.message||'Action failed',true);}
    finally{if(actionButton.isConnected)actionButton.disabled=false;}
@@ -434,4 +445,4 @@ async function initTurnstile(){
 }
 
 window.addEventListener('popstate',render);
-render();
+export const initialRender=render();

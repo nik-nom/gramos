@@ -1,5 +1,5 @@
 const conf = window.GRAMOS_CONFIG || {};
-const configValid = /^https:\/\/[\w-]+\.supabase\.co\/?$/.test(conf.supabaseUrl || '') && !String(conf.supabaseAnonKey || '').includes('PASTE_');
+const configValid = /^https:\/\/[\w-]+\.supabase\.co\/?$/.test(conf.supabaseUrl || '') && !!String(conf.supabaseAnonKey || '').trim() && !String(conf.supabaseAnonKey || '').includes('PASTE_');
 // Load the official browser SDK ONLY when the owner has configured Supabase.
 // The public demo must still work without a key or if a third-party CDN is unavailable.
 if (configValid && !/^\/demo(?:\/|$)/.test(location.pathname) && !window.supabase?.createClient) {
@@ -20,7 +20,7 @@ export async function villageBySlug(slug) { if (!api) return null; return await 
 export async function villageById(id) { if (!api) return null; return await call(api.from('villages').select('*').eq('id',id).maybeSingle()); }
 export async function itemsFor(id) { return api ? (await call(api.from('content_items').select('*').eq('village_id',id).order('sort_order',{ascending:true}).order('created_at',{ascending:false}))).filter(x=>!x.deleted_at) : []; }
 export async function publishedItemsFor(id) { return api ? (await call(api.from('content_items').select('*').eq('village_id',id).eq('status','published').order('sort_order',{ascending:true}).order('created_at',{ascending:false}))).filter(x=>!x.deleted_at) : []; }
-export async function getSession() { return (await api?.auth.getSession())?.data?.session || null; }
+export async function getSession() { if(!api)return null; const {data,error}=await api.auth.getSession(); if(error)throw new Error(error.message||'Session check failed');return data?.session||null; }
 export async function accessRole(userId) {
   if (!api || !userId) return {admin:false,ids:[],editorIds:[],reviewerIds:[]};
   const [a,mem] = await Promise.all([
