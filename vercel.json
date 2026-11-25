@@ -1,15 +1,33 @@
 {
   "version": 2,
-  "cleanUrls": true,
+  "cleanUrls": false,
   "trailingSlash": false,
+  "framework": null,
+  "buildCommand": null,
+  "outputDirectory": ".",
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/admin/login",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/robots.txt",
-      "destination": "/api/robots"
+      "destination": "/api/admin-robots"
     },
     {
       "source": "/sitemap.xml",
-      "destination": "/api/sitemap"
+      "destination": "/api/not-found"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin-shell.html"
+    },
+    {
+      "source": "/admin/:path*",
+      "destination": "/admin-shell.html"
     },
     {
       "source": "/v/:slug/news/:article",
@@ -24,24 +42,16 @@
       "destination": "/api/page?slug=:slug"
     },
     {
+      "source": "/v/:path*",
+      "destination": "/api/not-found"
+    },
+    {
       "source": "/demo",
-      "destination": "/index.html"
+      "destination": "/admin-shell.html"
     },
     {
       "source": "/demo/:path*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/admin",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/admin/:path*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/v/:path*",
-      "destination": "/index.html"
+      "destination": "/admin-shell.html"
     }
   ],
   "headers": [
@@ -75,12 +85,19 @@
         {
           "key": "X-Permitted-Cross-Domain-Policies",
           "value": "none"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
         }
       ]
     }
   ],
   "functions": {
     "api/page.js": {
+      "includeFiles": "index.html"
+    },
+    "api/admin-page.js": {
       "includeFiles": "index.html"
     }
   }

@@ -66,12 +66,12 @@ function enablePublicReadMore(){
 function startCarousels(){
  carouselTimers.forEach(clearInterval);carouselTimers=[];
  if(reducedMotion())return;
- for(const [id,delay] of [['svHero',6500],['svGallery',8500]]){
+ for(const [id,delay] of [['svHero',6500],['svGallery',8500],['svLeaders',6500]]){
    const slider=document.getElementById(id);
-   if(!slider||slider.querySelectorAll('.sv-slide').length<2)continue;
+   if(!slider||slider.querySelectorAll('.sv-slide,.sv-profile-page').length<2)continue;
    const timer=setInterval(()=>{
      if(!slider.isConnected||document.visibilityState==='hidden'||slider.matches(':hover')||slider.contains(document.activeElement))return;
-     slider.querySelector('[data-action="sv-next"]')?.click();
+     slider.querySelector('[data-action="sv-next"],[data-action="profile-next"]')?.click();
    },delay);
    carouselTimers.push(timer);
  }
@@ -96,7 +96,7 @@ async function render(){
  clearInterval(inboxTimer);inboxTimer=null;
  app.innerHTML='<div class="initial-loading" role="status" aria-live="polite">Loading…</div>';
  try {
-   const session=api?await getSession():null;
+   const session=api&&currentRoute[0]!=='demo'?await getSession():null;
    if(run!==pendingRender)return;
    role=session?.user?await accessRole(session.user.id):{admin:false,ids:[]};
    if(run!==pendingRender)return;
@@ -215,6 +215,10 @@ async function render(){
        publish.classList.remove('button-lite');publish.classList.add('btn','btn-dark');publish.textContent=lang==='mr'?'जतन करा व प्रकाशित करा':'Save & publish';
      }
    }
+   // Keep private editor previews private while navigating within the same village.
+   if(currentRoute[0]==='v'&&new URLSearchParams(location.search).get('preview')==='1'){
+     for(const a of app.querySelectorAll('a[href]')){const u=new URL(a.href,location.origin);const parts=u.pathname.split('/').filter(Boolean);if(u.origin===location.origin&&parts[0]==='v'&&parts[1]===currentRoute[1]){u.searchParams.set('preview','1');a.href=u.pathname+u.search+u.hash;}}
+   }
    enablePublicReadMore();
    startCarousels();
    startReveals();
@@ -233,6 +237,15 @@ app.addEventListener('click',async e=>{
    if(action==='public-read-more'){const modal=document.getElementById('publicTextModal');const text=publicLongText.get(actionButton.dataset.id);if(modal&&text){document.getElementById('publicTextModalContent').textContent=text;modal.showModal();}return;}
    if(action==='public-more-close'){document.getElementById('publicTextModal')?.close();return;}
    if(action==='sv-top'){window.scrollTo({top:0,behavior:reducedMotion()?'auto':'smooth'});return;}
+   if(['profile-prev','profile-next','profile-dot'].includes(action)){
+     const slider=actionButton.closest('.sv-profile-carousel');if(!slider)return;
+     const pages=[...slider.querySelectorAll('.sv-profile-page')];if(!pages.length)return;
+     const old=Number(slider.dataset.index)||0;
+     const next=action==='profile-dot'?Number(actionButton.dataset.index):(old+(action==='profile-next'?1:-1)+pages.length)%pages.length;
+     if(!Number.isInteger(next)||next<0||next>=pages.length)return;
+     slider.dataset.index=String(next);pages.forEach((page,i)=>page.hidden=i!==next);
+     slider.querySelectorAll('.sv-profile-dot').forEach((dot,i)=>dot.setAttribute('aria-pressed',String(i===next)));return;
+   }
    if(action==='sv-prev'||action==='sv-next'||action==='sv-dot'){
      const slider=document.getElementById(actionButton.dataset.slider);
      if(!slider)return;
@@ -338,10 +351,10 @@ app.addEventListener('click',async e=>{
 });
 
 app.addEventListener('keydown',e=>{
- const slider=e.target.closest?.('.sv-carousel');
+ const slider=e.target.closest?.('.sv-carousel,.sv-profile-carousel');
  if(!slider||!['ArrowLeft','ArrowRight'].includes(e.key))return;
  e.preventDefault();
- slider.querySelector(`[data-action="${e.key==='ArrowRight'?'sv-next':'sv-prev'}"]`)?.click();
+ const next=e.key==='ArrowRight';slider.querySelector(`[data-action="${next?'sv-next':'sv-prev'}"],[data-action="${next?'profile-next':'profile-prev'}"]`)?.click();
 });
 
 // No hidden background saving: make it obvious which changes still need Save.

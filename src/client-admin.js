@@ -14,10 +14,10 @@ export async function fetchClientRows(role){
  return villages.map(v=>({village:v,record:records.find(x=>x.village_id===v.id)||{},domain:domains.find(x=>x.village_id===v.id)}));
 }
 export function newVillagePage(lang){
- return `<main class="admin-shell container admin-v49-workspace"><div class="admin-page-top"><div><p class="eyebrow">NEW VILLAGE / CUSTOMER</p><h1>${tr(lang,'नवीन ग्रामपंचायत नोंदणी','Register a new village')}</h1><p>${tr(lang,'ग्राहकाची माहिती एकदाच भरा. गाव मसुदा स्वरूपात तयार होईल आणि ग्राहक नोंदवहीत आपोआप जोडले जाईल.','Fill in the customer details once. A draft village and customer record are created together.')}</p></div><a class="button-lite" href="/admin">← Dashboard</a></div>
+ return `<main class="admin-shell container admin-v49-workspace"><div class="admin-page-top"><div><p class="eyebrow">NEW VILLAGE / CUSTOMER</p><h1>${tr(lang,'नवीन ग्रामपंचायत नोंदणी','Create website')}</h1><p>${tr(lang,'ग्राहकाची माहिती एकदाच भरा. गाव मसुदा स्वरूपात तयार होईल आणि ग्राहक नोंदवहीत आपोआप जोडले जाईल.','Fill in the customer details once. A draft village and customer record are created together.')}</p></div><a class="button-lite" href="/admin">← Dashboard</a></div>
  <form id="createVillageForm" class="admin-v49-form">
  <section class="admin-panel form-panel"><h2>1. ${tr(lang,'वेबसाइट माहिती','Website details')}</h2><div class="form-grid">
- ${fld('slug','Website slug / /v/village','', 'text',true)}${fld('name_mr','ग्रामपंचायतीचे नाव — मराठी','', 'text',true)}
+ ${fld('slug','Website short name (URL)','', 'text',true)}${fld('name_mr','ग्रामपंचायतीचे नाव — मराठी','', 'text',true)}
  ${fld('name_en','Village name — English')}${fld('taluka_mr','तालुका — मराठी','', 'text',true)}
  ${fld('taluka_en','Taluka — English')}${fld('district_mr','जिल्हा — मराठी','', 'text',true)}
  ${fld('district_en','District — English')}
@@ -27,7 +27,7 @@ export function newVillagePage(lang){
  ${fld('customer_phone','Mobile / मोबाइल नंबर','', 'tel',true)}${fld('gram_sevak_name','Gram Sevak / ग्रामसेवक नाव','', 'text',true)}
  ${fld('panchayat_name','Gram Panchayat name / ग्रामपंचायत')}${payment(null)}
  </div><p class="small-muted">Only the Super Admin creates websites. No customer password is stored in this record.</p></section>
- <section class="admin-panel form-panel"><h2>3. ${tr(lang,'अंतिम तपासणी','Confirm & create')}</h2><label class="field wide"><span>Payment / notes (optional)</span><textarea name="payment_notes" maxlength="2000" rows="2"></textarea></label><div class="settings-actions"><button type="submit" class="btn btn-dark">Create village + customer record</button><a class="button-lite" href="/admin/clients">View customer register</a></div></section>
+ <section class="admin-panel form-panel"><h2>3. ${tr(lang,'अंतिम तपासणी','Confirm & create')}</h2><label class="field wide"><span>Payment / notes (optional)</span><textarea name="payment_notes" maxlength="2000" rows="2"></textarea></label><div class="settings-actions"><button type="submit" class="btn btn-dark">Create website</button><a class="button-lite" href="/admin">Cancel</a></div></section>
  </form></main>`;
 }
 export async function clientsPage(lang,role){
