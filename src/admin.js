@@ -4,7 +4,7 @@ import {api,configured,call,adminVillages,villageById,itemsFor,uploadPublicImage
 
 import {buildShamvadiVillage, SHAMVADI_TEMPLATE_LABEL} from './templates.js';
 import {FIXED_DUTIES,FIXED_MISSION_MR,FIXED_VALUES_MR} from './about-reference.js';
-import {referenceServices,referenceSteps,referenceForms,referenceLinks} from './services-reference.js';
+import {referenceServices,referenceSteps,referenceForms,referenceLinks,referenceFormsPaths,canonicalFormURL} from './services-reference.js';
 import {referenceSchemes} from './schemes-reference.js';
 import {referenceRTI} from './notices-reference.js';
 import {officialSlots,slideSlots,gallerySlots,missingMediaSlots} from './media-slots.js';
@@ -410,7 +410,7 @@ function noticesEditor(v,lang){
  <div class="admin-blue-note">The demo and village Notice Board use the same design. Use the records editor for all four tabs. Drafts stay private; PDF files are public after uploading, so never upload personal or confidential documents.</div>
  <section class="admin-panel form-panel"><div class="panel-heading"><h2>${tr(lang,'पानाचे शीर्षक, टॅब व विभाग','Page title, tab labels and section headings')}</h2></div>
  <form id="noticeSettingsForm" data-id="${esc(v.id)}"><div class="form-grid">${fields.map(([key,label,type])=>field(key,label,ss[key]||'',{textarea:type==='textarea',rows:3,wide:type==='textarea'})).join('')}</div><div class="settings-actions"><button type="submit" class="btn btn-dark">${tr(lang,'नोटीस बोर्ड सेटिंग्ज जतन करा','Save Notice Board settings')}</button></div></form></section>
- <details class="admin-panel admin-v45-reference-list"><summary><strong>${tr(lang,'RTI नमुना शीर्षके — PDF जोडा','RTI reference titles — attach matching PDFs')}</strong><small>${tr(lang,'अचूक दस्तऐवज दिल्यावरच डाउनलोड बटण कार्यान्वित होईल','Download buttons activate only for genuine uploaded PDFs')}</small></summary><div class="sv-about-admin-links">${referenceRTI.filter(x=>x.details.notice_type==='rti').map(x=>`<a class="button-lite" href="/admin/villages/${esc(v.id)}/content/notices?template=${esc(x.slug)}">${esc(loc(x,'title',lang))} · ${tr(lang,'PDF जोडा','Attach PDF')} →</a>`).join('')}</div></details>
+ <details class="admin-panel admin-v45-reference-list"><summary><strong>${tr(lang,'RTI विभागातील PDF — संपादित करा','RTI section PDFs — edit or replace')}</strong><small>${tr(lang,'जोडलेले PDF पहा किंवा बदला','Download buttons activate only for genuine uploaded PDFs')}</small></summary><div class="sv-about-admin-links">${referenceRTI.filter(x=>x.details.notice_type==='rti').map(x=>`<a class="button-lite" href="/admin/villages/${esc(v.id)}/content/notices?template=${esc(x.slug)}">${esc(loc(x,'title',lang))} · ${tr(lang,'PDF जोडा','Attach PDF')} →</a>`).join('')}</div></details>
  <section class="admin-panel"><div class="panel-heading"><h2>${tr(lang,'दस्तऐवज व नोटीस नोंदी','Notice and PDF records')}</h2></div>
  <div class="sv-about-admin-links"><a class="button-lite" href="/admin/villages/${esc(v.id)}/content/notices"><strong>${tr(lang,'नवीन नोटीस / PDF जोडा','Add / edit notice or PDF')}</strong><small>${tr(lang,'विभाग निवडा, शीर्षक व तारीख बदला, PDF अपलोड करा आणि प्रकाशित करा.','Choose one of four tabs, enter bilingual titles, date, upload PDF and publish.')}</small> →</a></div></section></div>`;
 }
@@ -432,7 +432,7 @@ async function contentEditor(v,items,kind,lang){
  const editId=params.get('edit');const selected=allEntries.find(x=>x.id===editId)||(!trash&&params.get('template')?allEntries.find(x=>x.slug===params.get('template')):null);
  const templates={services:referenceServices,service_steps:referenceSteps,service_forms:referenceForms,service_links:referenceLinks,schemes:referenceSchemes,notices:referenceRTI,leaders:referenceLeaderCards,officials:officialSlots,banners:slideSlots,gallery:gallerySlots}[kind]||[];
  const reference=selected?null:templates.find(t=>t.slug===params.get('template'));
- const x=selected||(reference?{...reference,external_url:['service_forms','notices'].includes(kind)?'':reference.external_url,...(kind==='leaders'?{image_url:''}:{})}:category?{details:{[categoryConfig[0]]:category}}:{});
+ const x=selected||(reference?{...reference,external_url:reference.external_url,...(kind==='leaders'?{image_url:''}:{})}:category?{details:{[categoryConfig[0]]:category}}:{});
  const input=(name)=>x[name]??'';const shownPhoto=imageURL(input('image_url'))||reference?.sample_image||reference?.image_url||(['leaders','officials'].includes(kind)?'/assets/placeholders/portrait.svg':'/assets/placeholders/photo.svg');
  const base=`/admin/villages/${esc(v.id)}/content/${kind}`;
  const editing=!trash&&Boolean(selected||reference||params.get('new')==='1'||params.has('page'));
@@ -475,7 +475,7 @@ async function contentEditor(v,items,kind,lang){
  ${kind==='service_forms'?`<div class="admin-blue-note">Upload a public PDF application form, then Save this item. Keep sensitive submissions out of this public folder.</div><label class="upload-box">${icon('document')} ${tr(lang,'PDF अर्ज नमुना अपलोड करा','Upload application PDF')}<input type="file" data-document-input data-target="external_url" data-village="${esc(v.id)}" accept="application/pdf,.pdf"></label>`:''}
  ${kind==='services'?`${field('icon','Service icon (emoji or symbol)',x.details?.icon??'▤')}<div class="admin-blue-note">Attach a PDF to this service card, or enter an official HTTPS service link in the External link field. Save and publish the item to display the link.</div><label class="upload-box">${icon('document')} ${tr(lang,'या सेवेसाठी PDF अपलोड करा','Upload PDF for this service')}<input type="file" data-document-input data-target="external_url" data-village="${esc(v.id)}" accept="application/pdf,.pdf"></label>`:''}
  ${['leaders','officials','banners','gallery'].includes(kind)?`<div class="gx65-photo-preview"><img data-record-photo src="${esc(shownPhoto)}" alt="${tr(lang,'सध्याचा फोटो','Current photo')}"><span data-record-photo-empty ${imageURL(input('image_url'))?'hidden':''}>${tr(lang,'नमुना फोटो — तुमचा फोटो अपलोड करा','Sample photo — upload your own photograph')}</span></div>`:''}${field('image_url','Image URL',input('image_url'))}<label class="upload-box">${icon('image')} ${tr(lang,'फोटो अपलोड करा','Upload image')}<input type="file" data-image-input data-target="image_url" data-village="${esc(v.id)}" accept="image/png,image/jpeg,image/webp"/></label>
- ${['notices','service_forms','services'].includes(kind) && /^https:\/\//i.test(String(input('external_url')||'')) && /\.pdf(?:[?#]|$)/i.test(String(input('external_url')||'')) ? `<p class="admin-pdf-existing"><a href="${esc(input('external_url'))}" target="_blank" rel="noopener noreferrer">Open attached PDF / जोडलेला PDF पहा ↗</a></p>` : ''}
+ ${['notices','service_forms','services'].includes(kind) && (/^https:\/\//i.test(String(input('external_url')||''))||referenceFormsPaths.has(canonicalFormURL(input('external_url')))) && /\.pdf(?:[?#]|$)/i.test(String(input('external_url')||'')) ? `<p class="admin-pdf-existing"><a href="${esc(input('external_url'))}" target="_blank" rel="noopener noreferrer">Download PDF</a></p>` : ''}
  ${field('external_url','External link (optional)',input('external_url'))}${field('sort_order','Display order',input('sort_order')??0,{type:'number'})}
  <div class="gx-save-actions" role="group" aria-label="${tr(lang,'जतन करण्याचे पर्याय','Save options')}"><button class="button-lite" type="submit" data-save-mode="draft">${icon('check')} ${tr(lang,'मसुदा जतन करा','Save draft')}</button><button class="btn btn-dark" type="submit" data-save-mode="publish">${icon('check')} ${tr(lang,'जतन करा व वेबसाइटवर दाखवा','Save and show on website')}</button></div><small>${tr(lang,'मसुदा सार्वजनिक संकेतस्थळावर दिसणार नाही.','Drafts are invisible until you publish them.')}</small></div></form></section></div>`;
 }
@@ -758,7 +758,7 @@ export async function submitAdminForm(form,route,role,navigate,rerender){
    payload.slug=slugify(payload.slug || payload.title_en) || `entry-${Date.now().toString(36)}`;
    if(payload.slug.length<2||payload.slug.length>90)throw new Error('Enter a valid short URL slug.');
    if(payload.image_url&&!/^https:\/\//.test(payload.image_url))throw new Error('Image URL must start with https://');
-   if(payload.external_url&&!/^https:\/\//.test(payload.external_url))throw new Error('External URL must start with https://');
+   if(payload.external_url&&!/^https:\/\//.test(payload.external_url)&&!(['service_forms','notices'].includes(form.dataset.kind)&&referenceFormsPaths.has(canonicalFormURL(payload.external_url))))throw new Error('External URL must start with https://');
    payload.sort_order=Number.parseInt(get('sort_order')||'0',10);if(!Number.isFinite(payload.sort_order))payload.sort_order=0;
    payload.status=asDraft?'draft':'published';
    payload.village_id=form.dataset.id;payload.kind=form.dataset.kind;

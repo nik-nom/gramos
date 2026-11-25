@@ -14,3 +14,5 @@ export function missingMediaSlots(slots,records){
  return free.slice(unmatched.length);
 }
 export function portraitPlaceholder(slot,preview){return slot?.sample_image||'/assets/placeholders/portrait.svg';}
+
+export function realMediaURL(raw){const value=String(raw||'').trim();if(!value)return '';try{const u=new URL(value,globalThis.location?.origin||'https://local.invalid');if(u.origin===(globalThis.location?.origin||'https://local.invalid')&&(/\/assets\/placeholders\//.test(u.pathname)||/\/assets\/(gp-mark|mark|landscape)\.svg$/.test(u.pathname)))return '';}catch{}return value;}

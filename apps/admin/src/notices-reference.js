@@ -1,23 +1,65 @@
-
-const renamedPdfPaths={"/assets/forms/reference-panchayat-campaign.pdf": "/assets/forms/mukhyamantri-samruddh-panchayatraj-abhiyan-gr-2025-08-06.pdf", "/assets/forms/reference-rural-employment-faq.pdf": "/assets/forms/viksit-bharat-g-ram-g-act-2025-hindi-faq.pdf", "/assets/forms/monthly-report-template.pdf": "/assets/forms/gram-panchayat-monthly-report-template.pdf"};
-/**
- * Screenshot-backed RTI list. The two actual RTI source PDFs have not been supplied. Other supplied documents are labelled references, not RTI orders.
- * A reference card is only a label, not an official document or download.
- * Each village can publish an approved PDF using the same slug, or add more.
- */
+import {canonicalFormURL,referenceFormsPaths} from "./services-reference.js";
 export const referenceRTI=Object.freeze([
- {id:'template-notices-rti-bench-order',kind:'notices',slug:'rti-bench-order',title_mr:'खंडपीठ आदेश',title_en:'Bench Order',body_mr:'',body_en:'',status:'published',details:{notice_type:'rti'},external_url:'',sort_order:0,template_default:true},
- {id:'template-notices-rti-sections-1-13',kind:'notices',slug:'rti-sections-1-13',title_mr:'माहिती अधिकार १ ते १३',title_en:'Right to Information, Sections 1–13',body_mr:'',body_en:'',status:'published',details:{notice_type:'rti'},external_url:'',sort_order:1,template_default:true},
- {"id": "template-notices-reference-panchayat-campaign", "kind": "notices", "slug": "reference-panchayat-campaign", "title_mr": "मुख्यमंत्री समृद्धी योजने GR", "title_en": "Mukhyamantri Samruddh Panchayatraj Abhiyan — GR (6 August 2025)", "body_mr": "", "body_en": "", "status": "published", "details": {"notice_type": "rti", "event_date": "2025-08-06"}, "external_url": "/assets/forms/mukhyamantri-samruddh-panchayatraj-abhiyan-gr-2025-08-06.pdf", "sort_order": 2, "template_default": true},
- {"id": "template-notices-reference-rural-employment-faq", "kind": "notices", "slug": "reference-rural-employment-faq", "title_mr": "विकसित भारत-जी राम जी अधिनियम, २०२५ — प्रश्नोत्तरे (हिंदी)", "title_en": "Viksit Bharat G RAM G Act, 2025 — Hindi FAQ", "body_mr": "", "body_en": "", "status": "published", "details": {"notice_type": "rti", "event_date": "2026-05-11"}, "external_url": "/assets/forms/viksit-bharat-g-ram-g-act-2025-hindi-faq.pdf", "sort_order": 3, "template_default": true},
- {"id": "template-notices-monthly-report-template", "kind": "notices", "slug": "monthly-report-template", "title_mr": "मासिक अहवाल — रिकामा नमुना", "title_en": "Monthly report — blank template", "body_mr": "", "body_en": "", "status": "published", "details": {"notice_type": "financial"}, "external_url": "/assets/forms/gram-panchayat-monthly-report-template.pdf", "sort_order": 4, "template_default": true}
+  {
+    "id": "template-notices-rti-bench-order",
+    "kind": "notices",
+    "slug": "rti-bench-order",
+    "title_mr": "लोकसेवा हक्क अर्ज — नमुना १",
+    "title_en": "Right to Service application — Form 1",
+    "body_mr": "लोकसेवा हक्काचा अर्ज; माहिती अधिकाराचा आदेश नाही.",
+    "body_en": "Right to Service application; not an RTI order.",
+    "status": "published",
+    "details": {
+      "notice_type": "rti"
+    },
+    "external_url": "/assets/forms/lokseva-right-to-service-application.pdf",
+    "sort_order": 0,
+    "template_default": true
+  },
+  {
+    "id": "template-notices-rti-sections-1-13",
+    "kind": "notices",
+    "slug": "rti-sections-1-13",
+    "title_mr": "लोकसेवा हक्क अर्ज — नमुना २",
+    "title_en": "Right to Service application — Form 2",
+    "body_mr": "लोकसेवा हक्काचा अर्ज; माहिती अधिकाराचा आदेश नाही.",
+    "body_en": "Right to Service application; not an RTI order.",
+    "status": "published",
+    "details": {
+      "notice_type": "rti"
+    },
+    "external_url": "/assets/forms/lokseva-right-to-service-form-2.pdf",
+    "sort_order": 1,
+    "template_default": true
+  },
+  {
+    "id": "template-notices-monthly-report-template",
+    "kind": "notices",
+    "slug": "monthly-report-template",
+    "title_mr": "मासिक अहवाल — रिकामा नमुना",
+    "title_en": "Monthly report — blank template",
+    "body_mr": "",
+    "body_en": "",
+    "status": "published",
+    "details": {
+      "notice_type": "financial"
+    },
+    "external_url": "/assets/forms/gram-panchayat-monthly-report-template.pdf",
+    "sort_order": 4,
+    "template_default": true
+  }
 ]);
 export const referenceNoticePaths=new Set(referenceRTI.map(r=>r.external_url).filter(Boolean));
-export const rtiReferenceSlugs=new Set(["reference-panchayat-campaign","reference-rural-employment-faq"]);
+export const rtiReferenceSlugs=new Set(['reference-panchayat-campaign','reference-rural-employment-faq']);
 export function mergeReferenceNotices(items,preview=false){
  const merged=new Map(referenceRTI.map(r=>[r.slug,r]));
- for(const original of (items||[])){const r={...original,external_url:renamedPdfPaths[original.external_url]||original.external_url};
-  if(r?.kind==='notices'&&(preview||r.status==='published')){const fallback=merged.get(r.slug);if(r.slug==='reference-panchayat-campaign'&&r.title_mr==='मुख्यमंत्री समृद्ध पंचायतराज अभियान — शासन निर्णय')r.title_mr=fallback.title_mr;merged.set(r.slug,fallback?.external_url&&!r.external_url?{...r,external_url:fallback.external_url}:r);}
+ for(const original of (items||[])){
+ if(original.kind!=='notices'||(!preview&&original.status!=='published')||original.deleted_at)continue;
+ const row={...original,external_url:canonicalFormURL(original.external_url)};
+ if(rtiReferenceSlugs.has(row.slug)&&row.details?.notice_type==='rti'&&(!row.external_url||referenceFormsPaths.has(row.external_url)))continue;
+ const base=merged.get(row.slug);
+ if(base&&(!row.external_url||row.external_url===base.external_url)&&base.details.notice_type==='rti')merged.set(row.slug,{...row,...base,id:row.id,template_default:false});
+ else merged.set(row.slug,base?.external_url&&!row.external_url?{...row,external_url:base.external_url}:row);
  }
  return [...merged.values()].sort((a,b)=>(a.sort_order??0)-(b.sort_order??0));
 }

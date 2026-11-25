@@ -3,7 +3,7 @@
  * details.notice_type and the optional public PDF URL on external_url.
  */
 import {esc,loc,safePdfURL} from './utils.js';
-import {mergeReferenceNotices,referenceNoticePaths,rtiReferenceSlugs} from './notices-reference.js';
+import {mergeReferenceNotices,referenceNoticePaths} from './notices-reference.js';
 const tr=(l,mr,en)=>l==='mr'?mr:en;
 const setting=(v,k,l)=>String(v.site_settings?.[`${k}_${l}`]||v.site_settings?.[`${k}_${l==='mr'?'en':'mr'}`]||'');
 const cfg=(v,k,l,mr,en)=>setting(v,k,l)||tr(l,mr,en);
@@ -27,20 +27,18 @@ const card=(v,x,index,type,lang)=>{
   return `<article class="sv-n-card">
     <h3>${index+1}. ${esc(loc(x,'title',lang))}</h3>
     ${date?`<p class="sv-n-date"><span aria-hidden="true">▣</span><time datetime="${esc(x.details.event_date)}">${esc(date)}</time></p>`:''}
-    ${url?`<a class="sv-n-download" href="${esc(url)}" ${referenceNoticePaths.has(url)?`download="${esc(loc(x,'title',lang))}.pdf"`: ''} target="_blank" rel="noopener noreferrer" aria-label="${esc(cfg(v,'notices_download_label',lang,'डाउनलोड करा','Download'))}: ${esc(loc(x,'title',lang))}">${esc(cfg(v,'notices_download_label',lang,'Download','Download'))}</a>`:
+    ${loc(x,'body',lang)?`<p>${esc(loc(x,'body',lang))}</p>`:''}
+    ${url?`<a class="sv-n-download" href="${esc(url)}" download="${esc(loc(x,'title',lang))}.pdf" ${referenceNoticePaths.has(url)?'':'target="_blank" rel="noopener noreferrer"'} aria-label="Download PDF — ${esc(loc(x,'title',lang))}">Download PDF</a>`:
        `<span class="sv-n-no-pdf">${esc(cfg(v,'notices_missing_pdf',lang,'PDF अद्याप अपलोड केलेले नाही.','PDF not uploaded yet.'))}</span>`}
   </article>`;
 };
 const pane=(v,items,type,lang)=>{
-  const all=listOf(items,type);
-  const refs=type==='rti'?all.filter(x=>rtiReferenceSlugs.has(x.slug)):[];
-  const list=type==='rti'?all.filter(x=>!rtiReferenceSlugs.has(x.slug)):all;
+  const list=listOf(items,type);
   const name=defaultTabs[type];
   const heading=cfg(v,`notices_section_${type}`,lang,...name);
   return `<section class="sv-n-section"><h2><span class="sv-n-bell" aria-hidden="true">♟</span>${esc(heading)}</h2>
     ${list.length?`<div class="sv-n-grid">${list.map((x,i)=>card(v,x,i,type,lang)).join('')}</div>`:
       `<p class="sv-n-empty">${esc(cfg(v,'notices_empty',lang,'अद्याप कोणतीही माहिती प्रकाशित झालेली नाही.','No documents have been published yet.'))}</p>`}
-    ${refs.length?`<h2 class="sv67-reference-heading">${tr(lang,'संदर्भ कागदपत्रे (RTI आदेश नाहीत)','Reference documents (not RTI orders)')}</h2><div class="sv-n-grid">${refs.map((x,i)=>card(v,x,i,type,lang)).join('')}</div>`:''}
   </section>`;
 };
 export function renderNoticesPage(v,items,lang,preview=false){
