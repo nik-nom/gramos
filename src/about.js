@@ -9,7 +9,7 @@ const tr=(l,m,e)=>l==='mr'?m:e;
 const cfg=(v,key,l)=>String(v.site_settings?.[`${key}_${l}`]||v.site_settings?.[`${key}_${l==='mr'?'en':'mr'}`]||'');
 const meta=(x,key,l)=>String(x?.details?.[`${key}_${l}`]||x?.details?.[`${key}_${l==='mr'?'en':'mr'}`]||'');
 const all=(items,kind)=>items.filter(x=>x.kind===kind).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
-const photo=(u,label)=>{const url=imageURL(u);return url?`<img src="${esc(url)}" alt="${esc(label)}" loading="lazy" decoding="async">`:`<span class="sv-a-avatar-placeholder" aria-hidden="true">${tr('mr','👤','👤')}</span>`;};
+const photo=(u,label)=>{const url=imageURL(u);return url?`<img src="${esc(url)}" alt="${esc(label)}" loading="lazy" decoding="async">`:`<img class="sv-a-avatar-placeholder" src="/assets/placeholders/portrait.svg" alt="" loading="lazy">`;};
 const text=(s)=>esc(String(s||''));
 const rows=(value)=>String(value||'').split('\n').map(s=>s.replace(/^\s*[-•]\s*/,'').trim()).filter(Boolean);
 const bulletList=(value)=>rows(value).length?`<ul>${rows(value).map(line=>`<li>${text(line)}</li>`).join('')}</ul>`:'';
@@ -62,17 +62,17 @@ function renderExtra(v,items,l){
 function people(v,items,l,group){
  const candidates=all(items,'officials');
  const filtered=candidates.filter(x=>group==='staff'?x.details?.about_group==='staff':x.details?.about_group!=='staff');
+ const placeholder=()=>`<article class="sv-a-person sv-a-person-placeholder"><img class="sv-a-avatar-placeholder" src="/assets/placeholders/portrait.svg" alt="" loading="lazy"><p class="sv-a-placeholder-label">${text(tr(l,'नाव अद्याप उपलब्ध नाही','Name not available'))}</p><p>${text(tr(l,'पद उपलब्ध नाही','Designation not available'))}</p></article>`;
  return filtered.length?`<div class="sv-a-people-grid">${filtered.map(x=>{
    const role=loc(x,'subtitle',l),ward=meta(x,'ward',l),phone=x.details?.phone||'', date=x.details?.elected_date||'';
    return `<article class="sv-a-person">${photo(x.image_url,loc(x,'title',l))}<h3>${text(loc(x,'title',l))}</h3>${role?`<span class="sv-a-role">${text(role)}</span>`:''}
     ${ward?`<p>${text(title(v,'about_label_ward',l,'वॉर्ड क्र.','Ward'))}: ${text(ward)}</p>`:''}
     ${phone?`<p>☎ <a href="tel:${esc(String(phone).replace(/[^+0-9]/g,''))}">${text(phone)}</a></p>`:''}
     ${date?`<p>${text(title(v,'about_label_elected',l,'निवड','Appointed'))}: ${text(date)}</p>`:''}</article>`;
-  }).join('')}</div>`:`<div class="sv-a-people-grid sv-a-people-grid-empty" aria-label="${tr(l,'अद्याप पदाधिकाऱ्यांची माहिती नाही','No officials published yet')}">
-    ${Array.from({length:3},(_,i)=>`<article class="sv-a-person sv-a-person-placeholder" ${i?'aria-hidden="true"':''}>
-       <span class="sv-a-avatar-placeholder" aria-hidden="true">👤</span>
-       ${i===0?`<p class="sv-a-placeholder-label">${text(tr(l,'अद्याप माहिती प्रकाशित नाही','Not yet published'))}</p>`:'<span class="sv-a-placeholder-stripe" aria-hidden="true"></span>'}
-       <span class="sv-a-placeholder-stripe sv-a-placeholder-stripe-short" aria-hidden="true"></span>
+  }).join('')}${Array.from({length:Math.max(0,3-filtered.length)},placeholder).join('')}</div>`:`<div class="sv-a-people-grid sv-a-people-grid-empty" aria-label="${tr(l,'अद्याप पदाधिकाऱ्यांची माहिती नाही','No officials published yet')}">
+    ${Array.from({length:3},(_,i)=>`<article class="sv-a-person sv-a-person-placeholder" >
+       <img class="sv-a-avatar-placeholder" src="/assets/placeholders/portrait.svg" alt="" loading="lazy">
+       <p class="sv-a-placeholder-label">${text(tr(l,'नाव अद्याप उपलब्ध नाही','Name not available'))}</p><p>${text(tr(l,'पद उपलब्ध नाही','Designation not available'))}</p>
     </article>`).join('')}
   </div>`;
 }
@@ -182,7 +182,7 @@ function aboutElements(items,l,tab){
      const n=header.length||Math.max(1,...records.map(row=>row.length));
      contents=`<div class="sv-a-table-scroll"><table class="sv-a-table">${header.length?`<thead><tr>${header.map(h=>`<th>${text(h)}</th>`).join('')}</tr></thead>`:''}<tbody>${records.map(row=>`<tr>${Array.from({length:n},(_,i)=>`<td>${text(row[i]||'')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
    } else if(type==='tiles')contents=`<div class="sv-a-custom-tiles">${lines.map(s=>{const [label,value]=s.split('|').map(y=>y.trim());return `<div class="sv-a-facility"><h3>${text(label)}</h3>${value?`<strong>${text(value)}</strong>`:''}</div>`;}).join('')}</div>`;
-   else if(type==='image')contents=image?`<img class="sv-a-custom-image" loading="lazy" decoding="async" src="${esc(image)}" alt="${text(heading)}">`:'';
+   else if(type==='image')contents=image?`<img class="sv-a-custom-image" loading="lazy" decoding="async" src="${esc(image)}" alt="${text(heading)}">`:`<img class="sv-a-custom-image" src="/assets/placeholders/photo.svg" alt="">`;
    else if(type==='text')contents=lines.length?`<div class="sv-a-custom-text">${lines.map(s=>`<p>${text(s)}</p>`).join('')}</div>`:'';
    const link=safeLink(x.external_url);
    return `<section class="sv-a-block sv-about-section sv-a-block-${type}">${heading?`<h2 class="sv-a-heading">${text(heading)}</h2>`:''}${contents}${type!=='image'&&image?`<img class="sv-a-custom-image" loading="lazy" decoding="async" src="${esc(image)}" alt="${text(heading)}">`:''}${link?`<a href="${esc(link)}" rel="noopener noreferrer" target="_blank">${tr(l,'अधिक माहिती','More information')} ↗</a>`:''}</section>`;

@@ -53,7 +53,7 @@ export const referenceSteps=Object.freeze([
 ]);
 export const referenceForms=Object.freeze([
  entry('service_forms','birth-death-nonavailability','जन्म मृत्यू अनुपलब्धता अर्ज','Birth/Death Non-availability Form','जन्म/मृत्यू नोंद अनुपलब्धतेसंबंधी अर्ज व जोडपत्रे.','Application and supporting documents for a birth/death non-availability certificate.',{},'/assets/forms/V_Swaraj_Gramsoft_Form_1.pdf',0),
- entry('service_forms','citizen-services-application','लोकसेवा अर्ज','Citizen Services Application','लोकसेवा हक्कांतर्गत दाखला किंवा प्रमाणपत्रासाठी अर्जाचा नमुना.','Application form for village certificates and citizen services.',{},'/assets/forms/V_Swaraj_Gramsoft_Form_2.pdf',1),
+ entry('service_forms','citizen-services-application','लोकसेवा अर्ज','Citizen Services Application','लोकसेवा हक्कांतर्गत दाखला किंवा प्रमाणपत्रासाठी अर्जाचा नमुना.','Application form for village certificates and citizen services.',{},'/assets/forms/V_Swaraj_Gramsoft_Right_to_Service_Form_2.pdf',1),
  entry('service_forms','marriage-registration','विवाहनोंदणी अर्ज','Marriage Registration Application','विवाह नोंदणी चेकलिस्ट, ज्ञापन, शपथपत्र व इतर नमुने.','Marriage registration checklist, memorandum, affidavit and related templates.',{},'/assets/forms/V_Swaraj_Gramsoft_Form_3.pdf',2),
 ]);
 export const referenceLinks=Object.freeze([
@@ -79,6 +79,6 @@ export function mergeReferenceRows(items,kind,preview=false){
  const defaults={services:referenceServices,service_steps:referenceSteps,service_forms:referenceForms,service_links:referenceLinks}[kind]||[];
  const saved=(items||[]).filter(x=>x.kind===kind&&(preview||x.status==='published')).sort((a,b)=>(a.sort_order??0)-(b.sort_order??0));
  const merged=new Map(defaults.map(x=>[x.slug,x]));
- for(const row of saved){const base=merged.get(row.slug);merged.set(row.slug,kind==='service_forms'&&!row.external_url&&base?.external_url?{...row,external_url:base.external_url}:row);}
+ for(const row of saved){const base=merged.get(row.slug); const old=['/assets/forms/V_Swaraj_Gramsoft_Form_2.pdf','/assets/forms/V_Swaraj_Gramsoft_Right_to_Service_Form_1.pdf']; const useDefault=kind==='service_forms'&&base?.external_url&&(!row.external_url||(row.slug==='citizen-services-application'&&old.includes(row.external_url))); merged.set(row.slug,useDefault?{...row,external_url:base.external_url}:row);}
  return [...merged.values()].sort((a,b)=>(a.sort_order??0)-(b.sort_order??0));
 }

@@ -26,12 +26,12 @@ function card(v,x,l){
    [cfg(v,'projects_location_label',l,'ठिकाण','Location'),pair('location')],
    [cfg(v,'projects_info_label',l,'अधिक माहिती','More Information'),loc(x,'body',l)]
  ].filter(([,val])=>val!==undefined&&val!==null&&String(val).trim());
- return `<article class="sv-p-card">${image?`<div class="sv-p-image"><img src="${esc(image)}" alt="${esc(loc(x,'title',l))}" loading="lazy" decoding="async" width="340" height="240"></div>`:'<div class="sv-p-image sv-p-image-empty" aria-hidden="true"></div>'}
+ return `<article class="sv-p-card">${image?`<div class="sv-p-image"><img src="${esc(image)}" alt="${esc(loc(x,'title',l))}" loading="lazy" decoding="async" width="340" height="240"></div>`:'<div class="sv-p-image"><img src="/assets/placeholders/photo.svg" alt=""></div>'}
   <div class="sv-p-card-body"><ul>${rows.map(([label,value])=>`<li><span class="sv-p-label">${esc(label)}:</span> ${esc(String(value))}</li>`).join('')}</ul></div></article>`;
 }
 function section(v,items,id,l){
  const filtered=sorted(items).filter(x=>validStatus(x)===id);
- return `<section class="sv-p-section sv-p-${id}"><h2>${esc(heading(v,id,l))}</h2>${filtered.length?`<div class="sv-p-grid">${filtered.map(x=>card(v,x,l)).join('')}</div>`:empty(v,id,l)}</section>`;
+ return `<section class="sv-p-section sv-p-${id}"><h2>${esc(heading(v,id,l))}</h2>${filtered.length?`<div class="sv-p-grid">${filtered.map(x=>card(v,x,l)).join('')}</div>`:`<div class="sv-p-grid">${Array.from({length:3},()=>`<article class="sv-p-card"><div class="sv-p-image"><img src="/assets/placeholders/photo.svg" alt=""></div>${empty(v,id,l)}</article>`).join('')}</div>`}</section>`;
 }
 export function renderProjectsPage(v,items,l){
  const activeParam=new URLSearchParams(location.search||'').get('projectTab');

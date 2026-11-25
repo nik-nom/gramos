@@ -7,7 +7,7 @@ export const GALLERY_TYPES=['meetings','campaigns','development','cultural','pre
 const spec={all:['सर्व पहा','View all'],meetings:['सभा','Meetings'],campaigns:['अभियान उपक्रम','Campaigns & Initiatives'],development:['विकासकामे / योजना','Development / Schemes'],cultural:['सामाजिक व सांस्कृतिक कार्यक्रम','Social & Cultural Events'],press:['पेपर कात्रणे','Newspaper Clippings'],videos:['व्हिडिओ गॅलरी','Video Gallery']};
 const category=x=>GALLERY_TYPES.includes(x.details?.gallery_type)?x.details.gallery_type:'meetings';
 const ordered=items=>items.filter(i=>i.kind==='gallery'||i.kind==='videos').sort((a,b)=>(a.sort_order??0)-(b.sort_order??0));
-const image=(x)=>imageURL(x.image_url)?`<img src="${esc(imageURL(x.image_url))}" loading="lazy" decoding="async" alt="${esc(loc(x,'title','mr')||loc(x,'title','en'))}">`:'<div class="sv-gallery-empty-photo">▧</div>';
+const image=(x)=>imageURL(x.image_url)?`<img src="${esc(imageURL(x.image_url))}" loading="lazy" decoding="async" alt="${esc(loc(x,'title','mr')||loc(x,'title','en'))}">`:'<img src="/assets/placeholders/photo.svg" alt="" loading="lazy">';
 const section=(v,items,l,type)=>{
  const isVideo=type==='videos'; const records=items.filter(x=>isVideo?x.kind==='videos':x.kind==='gallery'&&category(x)===type);
  const name=cfg(v,`gallery_section_${type}`,l,...spec[type]);
@@ -15,7 +15,7 @@ const section=(v,items,l,type)=>{
  ${records.length?`<div class="sv-gallery-tile-grid">${records.map(x=>{
  const url=isVideo?safeLink(x.external_url):imageURL(x.image_url);
  return `<figure class="sv-gallery-tile">${url?`<a ${isVideo?'target="_blank" rel="noopener noreferrer"':''} href="${esc(url)}" aria-label="${esc(loc(x,'title',l))}">${image(x)}${isVideo?'<span class="sv-gallery-play">▶</span>':''}</a>`:`<div class="sv-gallery-picture">${image(x)}</div>`}<figcaption>${esc(loc(x,'title',l))}</figcaption></figure>`;}).join('')}</div>`:
-  `<p class="sv-gallery-empty">${esc(cfg(v,'gallery_empty',l,'सध्या कोणतीही माहिती उपलब्ध नाही.','No media has been published in this category.'))}</p>`}</section>`;
+  `<div class="sv-gallery-tile-grid">${Array.from({length:3},()=>`<figure class="sv-gallery-tile"><img src="/assets/placeholders/photo.svg" alt=""><figcaption>${tr(l,'फोटो अद्याप उपलब्ध नाही','Media not available')}</figcaption></figure>`).join('')}</div>`}</section>`;
 };
 export function renderGalleryPage(v,items,l){const query=new URLSearchParams(location.search||'').get('galleryTab');const selected=query&&spec[query]?query:'all';const all=ordered(items);
 return `<div class="sv-gallery-page"><header class="sv-gallery-intro sv-wrap"><h1>${esc(cfg(v,'gallery_page_title',l,'फोटो - व्हिडिओ गॅलरी आणि मीडिया','Photos, Videos & Media'))}</h1>${get(v,'gallery_page_intro',l)?`<p>${esc(get(v,'gallery_page_intro',l))}</p>`:''}

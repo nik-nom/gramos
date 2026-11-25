@@ -10,7 +10,7 @@ export function renderPageElements(items,page,language='mr'){
     const type=item.details?.element || 'text', title=esc(loc(item,'title',language)),body=esc(loc(item,'body',language));
     if(type==='heading')return `<h2 class="sv-h2">${title}</h2>`;
     if(type==='list')return `<section class="sv-element"><h3>${title}</h3><ul>${String(loc(item,'body',language)||'').split('\n').map(v=>v.trim()).filter(Boolean).map(v=>`<li>${esc(v)}</li>`).join('')}</ul></section>`;
-    if(type==='image'){const url=imageURL(item.image_url);return url?`<figure class="sv-element"><img loading="lazy" decoding="async" src="${esc(url)}" alt="${title}"><figcaption>${title}</figcaption></figure>`:'';}
+    if(type==='image'){const url=imageURL(item.image_url);return `<figure class="sv-element"><img loading="lazy" decoding="async" src="${esc(url||'/assets/placeholders/photo.svg')}" alt="${title}"><figcaption>${title}</figcaption></figure>`;}
     if(type==='link'){const url=safeLink(item.external_url);return url?`<div class="sv-element"><a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${title} ↗</a></div>`:'';}
     if(type==='stat')return `<div class="sv-element sv-element-stat"><strong>${title}</strong><span>${body}</span></div>`;
     return `<section class="sv-element"><h3>${title}</h3><p>${body.replace(/\n/g,'<br>')}</p></section>`;
