@@ -27,7 +27,7 @@ const card=(v,x,index,type,lang)=>{
   return `<article class="sv-n-card">
     <h3>${index+1}. ${esc(loc(x,'title',lang))}</h3>
     ${date?`<p class="sv-n-date"><span aria-hidden="true">▣</span><time datetime="${esc(x.details.event_date)}">${esc(date)}</time></p>`:''}
-    ${url?`<a class="sv-n-download" href="${esc(url)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(cfg(v,'notices_download_label',lang,'डाउनलोड करा','Download'))}: ${esc(loc(x,'title',lang))}">${esc(cfg(v,'notices_download_label',lang,'Download','Download'))}</a>`:
+    ${url?`<a class="sv-n-download" href="${esc(url)}" ${referenceNoticePaths.has(url)?`download="${esc(loc(x,'title',lang))}.pdf"`: ''} target="_blank" rel="noopener noreferrer" aria-label="${esc(cfg(v,'notices_download_label',lang,'डाउनलोड करा','Download'))}: ${esc(loc(x,'title',lang))}">${esc(cfg(v,'notices_download_label',lang,'Download','Download'))}</a>`:
        `<span class="sv-n-no-pdf">${esc(cfg(v,'notices_missing_pdf',lang,'PDF अद्याप अपलोड केलेले नाही.','PDF not uploaded yet.'))}</span>`}
   </article>`;
 };

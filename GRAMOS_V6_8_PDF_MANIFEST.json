@@ -1,0 +1,72 @@
+[
+  {
+    "source": "1 शौचालय असल्याबाबत स्वयंघोषणापत्र.pdf",
+    "file": "assets/forms/toilet-self-declaration.pdf",
+    "sha256": "214eb4b9403ed538eabc71a17ade7898211a55251d09c2a15c56f7b8a605022f"
+  },
+  {
+    "source": "2 रहिवाशी स्वयंघोषणापत्र.pdf",
+    "file": "assets/forms/residence-self-declaration.pdf",
+    "sha256": "9684bc011e2629e895dce72d4c1cf6206c6f459cafd08b206e755ef6a60acdcb"
+  },
+  {
+    "source": "3 वीज जोडणी स्वयंघोषणापत्र.pdf",
+    "file": "assets/forms/electricity-connection-self-declaration.pdf",
+    "sha256": "9ced7b29a09afed240e549a7fc358bb21eb519fbc61824b82f233ab35ad91e8b"
+  },
+  {
+    "source": "4 हयात असल्याबाबत स्वयंघोषणापत्र.pdf",
+    "file": "assets/forms/life-self-declaration.pdf",
+    "sha256": "be493eb8ac5aac2a701b9578d91f19ba83387ad9e9cbdb84e261f8d8a9ba0310"
+  },
+  {
+    "source": "6 परित्यक्त्या असल्याबाबत स्वयंघोषणापत्र.pdf",
+    "file": "assets/forms/deserted-woman-self-declaration.pdf",
+    "sha256": "3ee281f01867ad6c47189c08ecae385db9985db5465151d810527732a2eaf778"
+  },
+  {
+    "source": "7 विभक्त कुटुंब असल्यास स्वयंघोषणापत्र.pdf",
+    "file": "assets/forms/separate-family-self-declaration.pdf",
+    "sha256": "2a9d4f1564b9f8a66cb748a540e11ac3948be401e05f50b790a9171613997957"
+  },
+  {
+    "source": "8 कोणत्याही योजनेचा लाभ न घेतल्याचे स्वयंघोषणापत्र.pdf",
+    "file": "assets/forms/no-scheme-benefit-self-declaration.pdf",
+    "sha256": "a97ee8fe993824606cfd1f8ce42d21bd17ed980846f12949ed9b01352833b9f2"
+  },
+  {
+    "source": "1 मंजूर नोंदणी अर्ज.pdf",
+    "file": "assets/forms/mgnrega-household-registration-form-1.pdf",
+    "sha256": "e47df746420d8a705beeb29bc2afa4f63e208666ca86b20d0b73b2aa2827b956"
+  },
+  {
+    "source": "4 अर्जा सोबत जोडवायची कागदपत्रांची यादी.pdf",
+    "file": "assets/forms/lokseva-required-documents-list.pdf",
+    "sha256": "c8f737feedaea1dbe9819b5361deee3bab736eee24e98500a4a07535ef3aa770"
+  },
+  {
+    "source": "5 बांधकाम परवानगी.pdf",
+    "file": "assets/forms/building-permission-andarsul-sample.pdf",
+    "sha256": "c09d296591dea474ace3385b697efa706217d957f0de0b384e414e47737bbb41"
+  },
+  {
+    "source": "dd2b52d4-c9c.pdf",
+    "file": "assets/forms/mukhyamantri-samruddh-panchayatraj-abhiyan-gr-2025-08-06.pdf",
+    "sha256": "81d055fc090258f380e8ba7875339b7f41f56e11ce0bff60d349cdf2a1c2a527"
+  },
+  {
+    "source": "9d19a4d5-21c.pdf",
+    "file": "assets/forms/viksit-bharat-g-ram-g-act-2025-hindi-faq.pdf",
+    "sha256": "d6c79be1212ce91d3f5c0788068380344e3781f0833d380f93b1ad2dcafbae8c"
+  },
+  {
+    "source": "मासिक अहवाल(1).pdf",
+    "file": "assets/forms/gram-panchayat-monthly-report-template.pdf",
+    "sha256": "fb32a11e00c9ac7753cff92311e8c8459c2ee7f1b042561243f8e67a81ef254e"
+  },
+  {
+    "source": "V_Swaraj_Gramsoft_Right_to_Service_Form_1(3).pdf",
+    "file": "assets/forms/lokseva-right-to-service-application.pdf",
+    "sha256": "b920cf8814337c90af2b85203f6e1e341acc3c57fb54497adbe10aecd7086eb7"
+  }
+]
