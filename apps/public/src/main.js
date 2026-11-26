@@ -1,5 +1,5 @@
-import {api,accessRole,getSession} from './data.js';
-import {renderPublic} from './public.js';
+import {browserRoute,cleanPath} from './domain-routing-v694.mjs';
+import {renderPublic} from './public.js?v=6.9.4';
 // Public deployment: the administrator bundle is excluded.
 const renderAdmin=async()=>'<main><h1>Not found</h1></main>';
 const submitAdminForm=async()=>false;
@@ -8,10 +8,13 @@ const imageUpload=async()=>false;
 const documentUpload=async()=>false;
 const excelUpload=async()=>false;
 const previewCSV=async()=>false;
-import {esc,notif} from './utils.js';
+import {esc,notif} from './utils.js?v=6.9.3';
 
 const app=document.getElementById('app');
-let lang=localStorage.getItem('gramos-language')==='en'?'en':'mr';
+const getLanguage=()=>{try{return localStorage.getItem('gramos-language')==='en'?'en':'mr';}catch{return 'mr';}};
+const saveLanguage=value=>{try{localStorage.setItem('gramos-language',value);}catch{}};
+let lang=getLanguage();
+let publicRequest=null;
 let role={admin:false,ids:[],editorIds:[],reviewerIds:[]};
 let pendingRender=0;
 let inboxTimer=null;
@@ -94,22 +97,22 @@ function startReveals(){
  targets.forEach(el=>revealObserver.observe(el));
  host.classList.add('sv-motion-ready');
 }
-const getRoute=()=>decodeURI(location.pathname).split('/').filter(Boolean);
+const boundDomainSlug=()=>document.querySelector('meta[name="gramos-domain-village"]')?.content||'';
+const getRoute=()=>browserRoute(decodeURI(location.pathname),boundDomainSlug());
 
 function navigate(url){if(!url)return;history.pushState({},'',url);window.scrollTo(0,0);render();}
 async function render(){
- const run=++pendingRender;currentRoute=getRoute();
+ const run=++pendingRender;publicRequest?.abort();publicRequest=new AbortController();const request=publicRequest;const signal=request.signal;const deadline=setTimeout(()=>request.abort(),28000);
  clearInterval(inboxTimer);inboxTimer=null;
- app.innerHTML='<div class="initial-loading" role="status" aria-live="polite">Loading…</div>';
+ app.innerHTML='<main class="container" aria-busy="true" style="padding:32px 16px"><h1>ग्रामपंचायत संकेतस्थळ</h1></main>';
  try {
-   const session=api&&currentRoute[0]!=='demo'?await getSession():null;
-   if(run!==pendingRender)return;
-   role=session?.user?await accessRole(session.user.id):{admin:false,ids:[]};
-   if(run!==pendingRender)return;
-   const html=currentRoute[0]==='admin'?await renderAdmin(currentRoute,lang,role,session?.user):await renderPublic(currentRoute,lang,role);
+   currentRoute=getRoute();
+   role={admin:false,ids:[],editorIds:[],reviewerIds:[]};
+   const html=await renderPublic(currentRoute,lang,role,signal);
    if(run!==pendingRender)return;
    document.documentElement.lang=currentRoute[0]==='admin'?lang:'mr';
    app.innerHTML=html;
+   const bound=boundDomainSlug();if(bound){for(const a of app.querySelectorAll('a[href]')){const url=new URL(a.href,location.origin);if(url.origin===location.origin){const path=cleanPath(url.pathname,bound);if(path!==url.pathname)a.href=path+url.search+url.hash;}}}
    if(currentRoute[0]==='admin'){
      const content=app.querySelector('.admin-content');const heading=content?.querySelector('.admin-page-top');if(heading&&heading.parentElement===content)content.prepend(heading);
      // Move controls without cloning or disabling them: FormData and the upload handlers
@@ -233,13 +236,14 @@ async function render(){
  }catch(error){
    if(run!==pendingRender)return;
    console.error('GramOS render failure:',error);
-   app.innerHTML=`<div class="error-screen"><img src="/assets/mark.svg" alt=""/><h1>Unable to load this page</h1><p>${esc(error?.message||'Unknown error')}</p><p>Your database connection may be unavailable. The public demo can still be viewed.</p><a class="btn btn-dark" href="/demo">Open demo</a> <a class="button-lite" href="/">Go home</a></div>`;
- }
+   app.innerHTML=`<div class="error-screen"><img src="/assets/mark.svg" alt=""/><h1>संकेतस्थळ सध्या उपलब्ध नाही</h1><p>कृपया पुन्हा प्रयत्न करा.</p><p>${esc(error?.message||'Unknown error')}</p><button type="button" class="btn btn-dark" data-action="retry-startup">पुन्हा प्रयत्न करा / Retry</button></div>`;
+ }finally{clearTimeout(deadline);}
 }
 
 app.addEventListener('click',async e=>{
  const actionButton=e.target.closest('[data-action]');
  if(actionButton){e.preventDefault();const action=actionButton.dataset.action;
+   if(action==='retry-startup'){location.reload();return;}
    if(action==='public-read-more'){const modal=document.getElementById('publicTextModal');const text=publicLongText.get(actionButton.dataset.id);if(modal&&text){document.getElementById('publicTextModalContent').textContent=text;modal.showModal();}return;}
    if(action==='public-more-close'){document.getElementById('publicTextModal')?.close();return;}
    if(action==='sv-top'){window.scrollTo({top:0,behavior:reducedMotion()?'auto':'smooth'});return;}
@@ -341,8 +345,8 @@ app.addEventListener('click',async e=>{
      startReveals();
      return;
    }
-   if(action==='set-nav-language'){const selected=actionButton.dataset.lang;if(!['mr','en'].includes(selected))return;lang=selected;localStorage.setItem('gramos-language',lang);render();return;}
-   if(action==='lang'){lang=lang==='mr'?'en':'mr';localStorage.setItem('gramos-language',lang);render();return;}
+   if(action==='set-nav-language'){const selected=actionButton.dataset.lang;if(!['mr','en'].includes(selected))return;lang=selected;saveLanguage(lang);render();return;}
+   if(action==='lang'){lang=lang==='mr'?'en':'mr';saveLanguage(lang);render();return;}
    try{actionButton.disabled=true;await adminAction(actionButton,currentRoute,role,navigate,render);}
    catch(error){notif(error.message||'Action failed',true);}
    finally{if(actionButton.isConnected)actionButton.disabled=false;}
@@ -353,7 +357,11 @@ app.addEventListener('click',async e=>{
  const a=e.target.closest('a[href]');
  if(!a||e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||a.target==='_blank'||a.hasAttribute('download'))return;
  const url=new URL(a.href,location.origin);if(url.origin!==location.origin)return;
- e.preventDefault();if(location.pathname.startsWith('/demo')&&!url.pathname.startsWith('/demo')){location.assign(url.href);return;}navigate(url.pathname+url.search+url.hash);
+ if(boundDomainSlug())return; // Real navigation revalidates tenant binding on every request.
+ const next=url.pathname.split('/').filter(Boolean),now=location.pathname.split('/').filter(Boolean);
+ // Route changes between villages or non-page resources must pass through Vercel.
+ if(next[0]!=='v'||now[0]!=='v'||next[1]!==now[1]||next.length>4)return;
+ e.preventDefault();navigate(url.pathname+url.search+url.hash);
 });
 
 app.addEventListener('keydown',e=>{
@@ -440,4 +448,4 @@ async function initTurnstile(){
 }
 
 window.addEventListener('popstate',render);
-render();
+export const initialRender=render();

@@ -1,0 +1,166 @@
+{
+  "version": 2,
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/api/village-site?gramosPath=home"
+    },
+    {
+      "source": "/v/:slug/news/:article",
+      "destination": "/api/village-site?gramosPath=v/:slug/news/:article"
+    },
+    {
+      "source": "/v/:slug/pages/:article",
+      "destination": "/api/village-site?gramosPath=v/:slug/pages/:article"
+    },
+    {
+      "source": "/v/:slug/:page",
+      "destination": "/api/village-site?gramosPath=v/:slug/:page"
+    },
+    {
+      "source": "/v/:slug",
+      "destination": "/api/village-site?gramosPath=v/:slug"
+    },
+    {
+      "source": "/news/:article",
+      "destination": "/api/village-site?gramosPath=news/:article"
+    },
+    {
+      "source": "/pages/:article",
+      "destination": "/api/village-site?gramosPath=pages/:article"
+    },
+    {
+      "source": "/home",
+      "destination": "/api/village-site?gramosPath=home"
+    },
+    {
+      "source": "/about",
+      "destination": "/api/village-site?gramosPath=about"
+    },
+    {
+      "source": "/services",
+      "destination": "/api/village-site?gramosPath=services"
+    },
+    {
+      "source": "/projects",
+      "destination": "/api/village-site?gramosPath=projects"
+    },
+    {
+      "source": "/schemes",
+      "destination": "/api/village-site?gramosPath=schemes"
+    },
+    {
+      "source": "/beneficiaries",
+      "destination": "/api/village-site?gramosPath=beneficiaries"
+    },
+    {
+      "source": "/notices",
+      "destination": "/api/village-site?gramosPath=notices"
+    },
+    {
+      "source": "/news",
+      "destination": "/api/village-site?gramosPath=news"
+    },
+    {
+      "source": "/gallery",
+      "destination": "/api/village-site?gramosPath=gallery"
+    },
+    {
+      "source": "/contact",
+      "destination": "/api/village-site?gramosPath=contact"
+    },
+    {
+      "source": "/staff",
+      "destination": "/api/village-site?gramosPath=staff"
+    },
+    {
+      "source": "/leaders",
+      "destination": "/api/village-site?gramosPath=leaders"
+    },
+    {
+      "source": "/facilities",
+      "destination": "/api/village-site?gramosPath=facilities"
+    },
+    {
+      "source": "/pages",
+      "destination": "/api/village-site?gramosPath=pages"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/api/village-site?gramosPath=robots.txt"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/village-site?gramosPath=sitemap.xml"
+    },
+    {
+      "source": "/index",
+      "destination": "/api/not-found"
+    },
+    {
+      "source": "/index.html",
+      "destination": "/api/not-found"
+    },
+    {
+      "source": "/admin",
+      "destination": "/api/not-found"
+    },
+    {
+      "source": "/admin/:path*",
+      "destination": "/api/not-found"
+    },
+    {
+      "source": "/demo",
+      "destination": "/api/not-found"
+    },
+    {
+      "source": "/demo/:path*",
+      "destination": "/api/not-found"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin"
+        },
+        {
+          "key": "X-Permitted-Cross-Domain-Policies",
+          "value": "none"
+        }
+      ]
+    }
+  ],
+  "functions": {
+    "api/page.js": {
+      "includeFiles": "page-template.html"
+    },
+    "api/village-site.js": {
+      "includeFiles": "page-template.html"
+    }
+  }
+}

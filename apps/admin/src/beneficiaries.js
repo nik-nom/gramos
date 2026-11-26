@@ -1,5 +1,5 @@
 /** Published village beneficiary scheme links. No citizen PII rendered or imported. */
-import {esc,loc} from './utils.js?v=6.9.2';
+import {esc,loc} from './utils.js?v=6.9.3';
 const tr=(l,m,e)=>l==='mr'?m:e;
 const order=(a,b)=>(a.sort_order||0)-(b.sort_order||0)||String(a.created_at||'').localeCompare(String(b.created_at||''));
 const idOK=s=>/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(String(s||''));

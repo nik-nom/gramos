@@ -1,3 +1,5 @@
+
+const renamedPdfPaths={"/assets/forms/V_Swaraj_Gramsoft_Form_1.pdf": "/assets/forms/birth-death-non-availability-form.pdf", "/assets/forms/V_Swaraj_Gramsoft_Form_3.pdf": "/assets/forms/marriage-registration-form.pdf", "/assets/forms/V_Swaraj_Gramsoft_Right_to_Service_Form_2.pdf": "/assets/forms/lokseva-right-to-service-form-2.pdf", "/assets/forms/declaration-toilet.pdf": "/assets/forms/toilet-self-declaration.pdf", "/assets/forms/declaration-residence.pdf": "/assets/forms/residence-self-declaration.pdf", "/assets/forms/declaration-electricity.pdf": "/assets/forms/electricity-connection-self-declaration.pdf", "/assets/forms/declaration-alive.pdf": "/assets/forms/life-self-declaration.pdf", "/assets/forms/declaration-deserted.pdf": "/assets/forms/deserted-woman-self-declaration.pdf", "/assets/forms/declaration-separated-family.pdf": "/assets/forms/separate-family-self-declaration.pdf", "/assets/forms/declaration-no-scheme.pdf": "/assets/forms/no-scheme-benefit-self-declaration.pdf", "/assets/forms/employment-registration.pdf": "/assets/forms/mgnrega-household-registration-form-1.pdf", "/assets/forms/required-documents.pdf": "/assets/forms/lokseva-required-documents-list.pdf", "/assets/forms/building-permission.pdf": "/assets/forms/building-permission-andarsul-sample.pdf"};
 /**
  * GramOS / V Swaraj default Lokseva page data.
  * Static template content is shared by DEMO and every village; it is not copied
@@ -52,9 +54,24 @@ export const referenceSteps=Object.freeze([
  entry('service_steps','issue-certificate','प्रमाणपत्र वितरण','Certificate Issue','पात्र अर्जदारास विहित कालमर्यादेत प्रमाणपत्र दिले जाईल.','Eligible applicants receive the certificate within the applicable period.',{},'',2),
 ]);
 export const referenceForms=Object.freeze([
- entry('service_forms','birth-death-nonavailability','जन्म मृत्यू अनुपलब्धता अर्ज','Birth/Death Non-availability Form','जन्म/मृत्यू नोंद अनुपलब्धतेसंबंधी अर्ज व जोडपत्रे.','Application and supporting documents for a birth/death non-availability certificate.',{},'/assets/forms/V_Swaraj_Gramsoft_Form_1.pdf',0),
- entry('service_forms','citizen-services-application','लोकसेवा अर्ज','Citizen Services Application','लोकसेवा हक्कांतर्गत दाखला किंवा प्रमाणपत्रासाठी अर्जाचा नमुना.','Application form for village certificates and citizen services.',{},'/assets/forms/V_Swaraj_Gramsoft_Right_to_Service_Form_2.pdf',1),
- entry('service_forms','marriage-registration','विवाहनोंदणी अर्ज','Marriage Registration Application','विवाह नोंदणी चेकलिस्ट, ज्ञापन, शपथपत्र व इतर नमुने.','Marriage registration checklist, memorandum, affidavit and related templates.',{},'/assets/forms/V_Swaraj_Gramsoft_Form_3.pdf',2),
+ entry('service_forms','birth-death-nonavailability','जन्म मृत्यू अनुपलब्धता अर्ज','Birth/Death Non-availability Form','जन्म/मृत्यू नोंद अनुपलब्धतेसंबंधी अर्ज व जोडपत्रे.','Application and supporting documents for a birth/death non-availability certificate.',{},'/assets/forms/birth-death-non-availability-form.pdf',0),
+ entry('service_forms','citizen-services-application','लोकसेवा अर्ज','Citizen Services Application','लोकसेवा हक्कांतर्गत दाखला किंवा प्रमाणपत्रासाठी अर्जाचा नमुना.','Application form for village certificates and citizen services.',{},'/assets/forms/lokseva-right-to-service-application.pdf',1),
+ entry('service_forms','marriage-registration','विवाहनोंदणी अर्ज','Marriage Registration Application','विवाह नोंदणी चेकलिस्ट, ज्ञापन, शपथपत्र व इतर नमुने.','Marriage registration checklist, memorandum, affidavit and related templates.',{},'/assets/forms/marriage-registration-form.pdf',2),
+ entry("service_forms","declaration-toilet","शौचालय असल्याबाबत स्वयंघोषणापत्र","Toilet self-declaration","","",{},"/assets/forms/toilet-self-declaration.pdf",3),
+ entry("service_forms","declaration-residence","रहिवासी स्वयंघोषणापत्र","Residence self-declaration","","",{},"/assets/forms/residence-self-declaration.pdf",4),
+ entry("service_forms","declaration-electricity","वीज जोडणीसाठी स्वयंघोषणापत्र","Electricity connection self-declaration","","",{},"/assets/forms/electricity-connection-self-declaration.pdf",5),
+ entry("service_forms","declaration-alive","हयात असल्याबाबत स्वयंघोषणापत्र","Life self-declaration","","",{},"/assets/forms/life-self-declaration.pdf",6),
+ entry("service_forms","declaration-deserted","परित्यक्त्या असल्याबाबत स्वयंघोषणापत्र","Deserted woman self-declaration","","",{},"/assets/forms/deserted-woman-self-declaration.pdf",7),
+ entry("service_forms","declaration-separated-family","विभक्त कुटुंबाबाबत स्वयंघोषणापत्र","Separate household self-declaration","","",{},"/assets/forms/separate-family-self-declaration.pdf",8),
+ entry("service_forms","declaration-no-scheme","कोणत्याही योजनेचा लाभ न घेतल्याचे स्वयंघोषणापत्र","No scheme benefit self-declaration","","",{},"/assets/forms/no-scheme-benefit-self-declaration.pdf",9),
+ entry("service_forms","employment-registration","मनरेगा — मजूर कुटुंब नोंदणी अर्ज (नमुना १)","MGNREGA household registration (Form 1)","जुना संदर्भ नमुना; सध्याची प्रक्रिया कार्यालयात तपासा.","Legacy reference form; confirm current procedure locally.",{},"/assets/forms/mgnrega-household-registration-form-1.pdf",10),
+ entry("service_forms","required-documents","अर्जासोबत जोडावयाच्या कागदपत्रांची यादी","Required documents checklist","","",{},"/assets/forms/lokseva-required-documents-list.pdf",11),
+ entry("service_forms","building-permission","बांधकाम परवानगी अर्ज — अंदरसूल नमुना","Building permission application — Andarsul sample","अंदरसूल ग्रामपंचायतीचा २०२१ चा नमुना; आपल्या गावासाठी कार्यालयातून पडताळा.","2021 Andarsul sample; confirm the applicable local form before use.",{},"/assets/forms/building-permission-andarsul-sample.pdf",12),
+ entry("service_forms","right-to-service-form-2","लोकसेवा हक्क अर्ज — नमुना २","Right to Service application — Form 2","","",{},"/assets/forms/lokseva-right-to-service-form-2.pdf",13),
+ entry("service_forms","lokseva-application-alternate","अर्ज नमुना","Application specimen","","",{},"/assets/forms/lokseva-application-specimen.pdf",14),
+ entry("service_forms","panchayat-campaign-gr","मुख्यमंत्री समृद्धी योजने GR","Mukhyamantri Samruddh Panchayatraj Abhiyan GR","","",{},"/assets/forms/mukhyamantri-samruddh-panchayatraj-abhiyan-gr-2025-08-06.pdf",15),
+ entry("service_forms","rural-employment-faq","विकसित भारत-जी राम जी अधिनियम, २०२५ — प्रश्नोत्तरे (हिंदी)","Viksit Bharat G RAM G Act — Hindi FAQ","","",{},"/assets/forms/viksit-bharat-g-ram-g-act-2025-hindi-faq.pdf",16),
+ entry("service_forms","monthly-report-template","मासिक अहवाल — रिकामा नमुना","Monthly report — blank template","","",{},"/assets/forms/gram-panchayat-monthly-report-template.pdf",17),
 ]);
 export const referenceLinks=Object.freeze([
  ['aaple-sarkar','आपले सरकार सेवा केंद्र- ऑनलाइन सेवा','Aaple Sarkar Online Services','https://aaplesarkar.mahaonline.gov.in','blue'],
@@ -68,17 +85,32 @@ export const referenceLinks=Object.freeze([
  ['social-justice','सामाजिक न्याय व विशेष सहाय्य विभाग','Social Justice Department','https://sjsa.maharashtra.gov.in','blue'],
  ['grievance','तक्रार निवारण प्रणाली','Grievance Redressal','https://grievances.maharashtra.gov.in/mr','blue'],
 ].map(([slug,mr,en,url,color],i)=>entry('service_links',slug,mr,en,'','',{color},url,i)));
-export const referenceFormsPaths=new Set([
- ...referenceForms.map(x=>x.external_url),
- '/assets/forms/V_Swaraj_Gramsoft_Right_to_Service_Form_1.pdf',
- '/assets/forms/V_Swaraj_Gramsoft_Right_to_Service_Form_2.pdf'
-]);
-/** Defaults are never written to another village's database. Published per-village
- * records override matching slugs; unique new records append without duplication. */
+export const referenceFormsPaths=new Set(referenceForms.map(x=>x.external_url));
+const legacyPaths={...renamedPdfPaths,
+ '/assets/forms/V_Swaraj_Gramsoft_Form_2.pdf':'/assets/forms/lokseva-right-to-service-application.pdf',
+ '/assets/forms/V_Swaraj_Gramsoft_Right_to_Service_Form_1.pdf':'/assets/forms/lokseva-right-to-service-application.pdf',
+ '/assets/forms/reference-panchayat-campaign.pdf':'/assets/forms/mukhyamantri-samruddh-panchayatraj-abhiyan-gr-2025-08-06.pdf',
+ '/assets/forms/reference-rural-employment-faq.pdf':'/assets/forms/viksit-bharat-g-ram-g-act-2025-hindi-faq.pdf',
+ '/assets/forms/monthly-report-template.pdf':'/assets/forms/gram-panchayat-monthly-report-template.pdf'};
+export function canonicalFormURL(raw){
+ const value=String(raw||'').trim(); let key=value;
+ try{const u=new URL(value,globalThis.location?.origin||'https://local.invalid');if(u.origin===globalThis.location?.origin)key=u.pathname;}catch{}
+ const canonical=legacyPaths[key]||key;
+ return referenceFormsPaths.has(canonical)?canonical:value;
+}
 export function mergeReferenceRows(items,kind,preview=false){
  const defaults={services:referenceServices,service_steps:referenceSteps,service_forms:referenceForms,service_links:referenceLinks}[kind]||[];
- const saved=(items||[]).filter(x=>x.kind===kind&&(preview||x.status==='published')).sort((a,b)=>(a.sort_order??0)-(b.sort_order??0));
+ const saved=(items||[]).filter(x=>x.kind===kind&&(preview||x.status==='published')&&!x.deleted_at).sort((a,b)=>(a.sort_order??0)-(b.sort_order??0));
  const merged=new Map(defaults.map(x=>[x.slug,x]));
- for(const row of saved){const base=merged.get(row.slug); const old=['/assets/forms/V_Swaraj_Gramsoft_Form_2.pdf','/assets/forms/V_Swaraj_Gramsoft_Right_to_Service_Form_1.pdf']; const useDefault=kind==='service_forms'&&base?.external_url&&(!row.external_url||(row.slug==='citizen-services-application'&&old.includes(row.external_url))); merged.set(row.slug,useDefault?{...row,external_url:base.external_url}:row);}
+ for(const original of saved){const row={...original,external_url:canonicalFormURL(original.external_url)};const base=merged.get(row.slug);
+ if(kind==='service_forms'){
+ // A legacy Form 2 link saved on the main Lokseva slot must not hide Form 1.
+ if(row.slug==='citizen-services-application'&&row.external_url==='/assets/forms/lokseva-right-to-service-form-2.pdf')row.external_url=base.external_url;
+ if(base?.external_url&&!row.external_url)row.external_url=base.external_url;
+ // Old imported copies of the same bundled form use its existing card, not a duplicate.
+ if(!base&&referenceFormsPaths.has(row.external_url)){const match=defaults.find(x=>x.external_url===row.external_url);if(match)continue;}
+ }
+ merged.set(row.slug,row);
+ }
  return [...merged.values()].sort((a,b)=>(a.sort_order??0)-(b.sort_order??0));
 }

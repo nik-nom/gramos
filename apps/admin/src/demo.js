@@ -1,4 +1,4 @@
-import {referenceSchemes} from './schemes-reference.js?v=6.9.2';
+import {referenceSchemes} from './schemes-reference.js?v=6.9.3';
 const demoVillage = {
   id:'demo', slug:'demo', status:'published', name_en:'Shamvadi', name_mr:'शामवाडी',
   tagline_en:'Welcome to the official Gram Panchayat website.', tagline_mr:'या अधिकृत संकेतस्थळावर आपले स्वागत आहे',

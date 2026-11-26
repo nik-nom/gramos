@@ -1,7 +1,7 @@
 /** GramOS v3.1 — Marathi-first editable contact, directions, social and message page. */
-import {esc,loc,safeLink} from './utils.js?v=6.9.2';
-import {socialUrl} from './social.js?v=6.9.2';
-import {MARATHI_SOCIAL_HEADING} from './branding.js?v=6.9.2';
+import {esc,loc,safeLink} from './utils.js?v=6.9.3';
+import {socialUrl} from './social.js?v=6.9.3';
+import {MARATHI_SOCIAL_HEADING} from './branding.js?v=6.9.3';
 const value=(v,key,l)=>String(v.site_settings?.[`${key}_${l}`]||v.site_settings?.[`${key}_${l==='mr'?'en':'mr'}`]||'');
 const cfg=(v,key,l,defaultMr)=>value(v,key,l)||defaultMr;
 const mapEmbed=u=>{try{const x=new URL(u);return x.protocol==='https:'&&(['www.google.com','maps.google.com'].includes(x.hostname))&&(/^\/maps\/embed/.test(x.pathname)||x.hostname==='maps.google.com'&&x.pathname==='/maps')?x.href:'';}catch{return '';}};

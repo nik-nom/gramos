@@ -1,5 +1,5 @@
 /** GramOS v3.0 — Shamvadi-style news list and full-article page. */
-import {esc,loc,imageURL,safeLink,formatDate} from './utils.js?v=6.9.2';
+import {esc,loc,imageURL,safeLink,formatDate} from './utils.js?v=6.9.3';
 const tr=(l,m,e)=>l==='mr'?m:e;
 const value=(v,k,l)=>String(v.site_settings?.[`${k}_${l}`]||v.site_settings?.[`${k}_${l==='mr'?'en':'mr'}`]||'');
 const cfg=(v,k,l,m,e)=>value(v,k,l)||tr(l,m,e);

@@ -3,9 +3,9 @@
  * Every village-specific fact, official, committee, facility and duty comes from
  * villages/site_settings or published content_items; no real village facts live here.
  */
-import {esc,loc,imageURL,safeLink} from './utils.js?v=6.9.2';
-import {officialSlots,missingMediaSlots,portraitPlaceholder} from './media-slots.js?v=6.9.2';
-import {FIXED_MISSION_MR,FIXED_MISSION_EN,FIXED_VALUES_MR,FIXED_VALUES_EN,FIXED_DUTIES} from './about-reference.js?v=6.9.2';
+import {esc,loc,imageURL,safeLink} from './utils.js?v=6.9.3';
+import {officialSlots,missingMediaSlots,portraitPlaceholder} from './media-slots.js?v=6.9.3';
+import {FIXED_MISSION_MR,FIXED_MISSION_EN,FIXED_VALUES_MR,FIXED_VALUES_EN,FIXED_DUTIES} from './about-reference.js?v=6.9.3';
 const tr=(l,m,e)=>l==='mr'?m:e;
 const cfg=(v,key,l)=>String(v.site_settings?.[`${key}_${l}`]||v.site_settings?.[`${key}_${l==='mr'?'en':'mr'}`]||'');
 const meta=(x,key,l)=>String(x?.details?.[`${key}_${l}`]||x?.details?.[`${key}_${l==='mr'?'en':'mr'}`]||'');

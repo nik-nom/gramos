@@ -1,7 +1,7 @@
-import {renderBeneficiarySections} from './beneficiaries.js?v=6.9.2';
-import {mergeReferenceSchemes} from './schemes-reference.js?v=6.9.2';
+import {renderBeneficiarySections} from './beneficiaries.js?v=6.9.3';
+import {mergeReferenceSchemes} from './schemes-reference.js?v=6.9.3';
 /** GramOS 2.8: Editable Government Schemes page, shared by demo and every village. */
-import {esc,loc,safeLink} from './utils.js?v=6.9.2';
+import {esc,loc,safeLink} from './utils.js?v=6.9.3';
 const tr=(lang,mr,en)=>lang==='mr'?mr:en;
 const setting=(v,key,l)=>String(v.site_settings?.[`${key}_${l}`]||v.site_settings?.[`${key}_${l==='mr'?'en':'mr'}`]||'');
 const cfg=(v,key,l,mr,en)=>setting(v,key,l)||tr(l,mr,en);

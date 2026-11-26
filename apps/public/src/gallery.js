@@ -1,5 +1,6 @@
 /** GramOS v3.0 — editable image/video gallery grouped like the reference. */
-import {esc,loc,imageURL,safeLink} from './utils.js';
+import {esc,loc,imageURL,safeLink} from './utils.js?v=6.9.3';
+import {gallerySlots,missingMediaSlots} from './media-slots.js?v=6.9.3';
 const tr=(l,m,e)=>l==='mr'?m:e;
 const get=(v,k,l)=>String(v.site_settings?.[`${k}_${l}`]||v.site_settings?.[`${k}_${l==='mr'?'en':'mr'}`]||'');
 const cfg=(v,k,l,m,e)=>get(v,k,l)||tr(l,m,e);
@@ -11,10 +12,12 @@ const image=(x)=>imageURL(x.image_url)?`<img src="${esc(imageURL(x.image_url))}"
 const section=(v,items,l,type)=>{
  const isVideo=type==='videos'; const records=items.filter(x=>isVideo?x.kind==='videos':x.kind==='gallery'&&category(x)===type);
  const name=cfg(v,`gallery_section_${type}`,l,...spec[type]);
+ const samples=type==='meetings'?missingMediaSlots(gallerySlots,records):[];
+ const sampleTiles=samples.map(s=>`<figure class="sv-gallery-tile"><img src="${esc(s.sample_image)}" alt="" loading="lazy"><figcaption>${tr(l,'नमुना फोटो — गावाचा अधिकृत फोटो नाही','Sample photo — not an official village photo')}</figcaption></figure>`).join('');
  return `<section class="sv-gallery-group"><h2>${esc(name)}</h2>
- ${records.length?`<div class="sv-gallery-tile-grid">${records.map(x=>{
+ ${records.length||samples.length?`<div class="sv-gallery-tile-grid">${records.map(x=>{
  const url=isVideo?safeLink(x.external_url):imageURL(x.image_url);
- return `<figure class="sv-gallery-tile">${url?`<a ${isVideo?'target="_blank" rel="noopener noreferrer"':''} href="${esc(url)}" aria-label="${esc(loc(x,'title',l))}">${image(x)}${isVideo?'<span class="sv-gallery-play">▶</span>':''}</a>`:`<div class="sv-gallery-picture">${image(x)}</div>`}<figcaption>${esc(loc(x,'title',l))}</figcaption></figure>`;}).join('')}</div>`:
+ return `<figure class="sv-gallery-tile">${url?`<a ${isVideo?'target="_blank" rel="noopener noreferrer"':''} href="${esc(url)}" aria-label="${esc(loc(x,'title',l))}">${image(x)}${isVideo?'<span class="sv-gallery-play">▶</span>':''}</a>`:`<div class="sv-gallery-picture">${image(x)}</div>`}<figcaption>${esc(loc(x,'title',l))}</figcaption></figure>`;}).join('')}${sampleTiles}</div>`:
   `<div class="sv-gallery-tile-grid">${Array.from({length:3},()=>`<figure class="sv-gallery-tile"><img src="/assets/placeholders/photo.svg" alt=""><figcaption>${tr(l,'फोटो अद्याप उपलब्ध नाही','Media not available')}</figcaption></figure>`).join('')}</div>`}</section>`;
 };
 export function renderGalleryPage(v,items,l){const query=new URLSearchParams(location.search||'').get('galleryTab');const selected=query&&spec[query]?query:'all';const all=ordered(items);

@@ -2,8 +2,8 @@
  * Records are village-scoped content_items(kind='notices'); the admin sets
  * details.notice_type and the optional public PDF URL on external_url.
  */
-import {esc,loc,safePdfURL} from './utils.js?v=6.9.2';
-import {mergeReferenceNotices,referenceNoticePaths} from './notices-reference.js?v=6.9.2';
+import {esc,loc,safePdfURL} from './utils.js?v=6.9.3';
+import {mergeReferenceNotices,referenceNoticePaths} from './notices-reference.js?v=6.9.3';
 const tr=(l,mr,en)=>l==='mr'?mr:en;
 const setting=(v,k,l)=>String(v.site_settings?.[`${k}_${l}`]||v.site_settings?.[`${k}_${l==='mr'?'en':'mr'}`]||'');
 const cfg=(v,k,l,mr,en)=>setting(v,k,l)||tr(l,mr,en);

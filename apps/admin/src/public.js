@@ -1,21 +1,21 @@
-import {applyPublicMetadata} from './seo.js?v=6.9.2';
-import {renderContactPage} from './contact.js?v=6.9.2';
-import {renderNewsPage,renderNewsDetail} from './news.js?v=6.9.2';
-import {renderGalleryPage} from './gallery.js?v=6.9.2';
-import {renderAboutPage} from './about.js?v=6.9.2';
-import {renderServicesPage} from './services.js?v=6.9.2';
-import {renderProjectsPage} from './projects.js?v=6.9.2';
-import {renderSchemesPage,renderYojanaBeneficiariesPage} from './schemes.js?v=6.9.2';
-import {renderBeneficiariesPage} from './beneficiaries.js?v=6.9.2';
-import {renderNoticesPage} from './notices.js?v=6.9.2';
-import {renderShamvadiHomepage,homeHeader,homeFooter,homeBottomLogo,peopleCards} from './homepage.js?v=6.9.2';
+import {applyPublicMetadata} from './seo.js?v=6.9.3';
+import {renderContactPage} from './contact.js?v=6.9.3';
+import {renderNewsPage,renderNewsDetail} from './news.js?v=6.9.3';
+import {renderGalleryPage} from './gallery.js?v=6.9.3';
+import {renderAboutPage} from './about.js?v=6.9.3';
+import {renderServicesPage} from './services.js?v=6.9.3';
+import {renderProjectsPage} from './projects.js?v=6.9.3';
+import {renderSchemesPage,renderYojanaBeneficiariesPage} from './schemes.js?v=6.9.3';
+import {renderBeneficiariesPage} from './beneficiaries.js?v=6.9.3';
+import {renderNoticesPage} from './notices.js?v=6.9.3';
+import {renderShamvadiHomepage,homeHeader,homeFooter,homeBottomLogo,peopleCards} from './homepage.js?v=6.9.3';
 // GramOS – Shamvadi-inspired blue Gram Panchayat public template.
 // Original code and styling; content and page sequence based on the public reference shamvadi.gpweb.in.
-import {esc,loc,icon,imageURL,safeLink,formatDate} from './utils.js?v=6.9.2';
-import {socialUrl} from './social.js?v=6.9.2';
-import {renderPageElements} from './page-elements.js?v=6.9.2';
-import {villageBySlug,itemsFor,publishedItemsFor,configured,getSiteDraft,withVillageDraft,api,call} from './data.js?v=6.9.2';
-import {getDemo} from './demo.js?v=6.9.2';
+import {esc,loc,icon,imageURL,safeLink,formatDate} from './utils.js?v=6.9.3';
+import {socialUrl} from './social.js?v=6.9.3';
+import {renderPageElements} from './page-elements.js?v=6.9.3';
+import {villageBySlug,itemsFor,publishedItemsFor,configured,getSiteDraft,withVillageDraft,api,call} from './data.js?v=6.9.3';
+import {getDemo} from './demo.js?v=6.9.3';
 
 const names={home:['मुखपृष्ठ','Home'],about:['ग्रामपंचायतीबद्दल','About Gram Panchayat'],gallery:['फोटो गॅलरी','Photo Gallery'],services:['लोकसेवा','Citizen Services'],news:['बातम्या','News'],notices:['सूचना फलक','Notice Board'],schemes:['शासकीय योजना','Government Schemes'],beneficiaries:['लाभार्थी यादी','Beneficiary Lists'],projects:['विकासकामे','Development Works'],staff:['पदाधिकारी व कर्मचारी','Office Bearers'],leaders:['माननीय पदाधिकारी','Leadership'],contact:['संपर्क','Contact'],pages:['महत्वाची पाने','Important Pages'],facilities:['ग्राम सुविधा','Village Facilities']};
 const T=(mr,en,l)=>l==='mr'?mr:en;

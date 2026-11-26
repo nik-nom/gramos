@@ -1,5 +1,5 @@
 /** GramOS v2.7 - Editable Shamvadi Development Projects page */
-import {esc,loc,imageURL} from './utils.js?v=6.9.2';
+import {esc,loc,imageURL} from './utils.js?v=6.9.3';
 const tr=(l,m,e)=>l==='mr'?m:e;
 const setting=(v,key,l)=>String(v.site_settings?.[`${key}_${l}`]||v.site_settings?.[`${key}_${l==='mr'?'en':'mr'}`]||'');
 const cfg=(v,key,l,m,e)=>setting(v,key,l)||tr(l,m,e);

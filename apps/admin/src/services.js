@@ -2,8 +2,8 @@
  * Screenshot-matched template cards + the user's unaltered V Swaraj PDF forms.
  * Existing published per-village content overrides cards with the same slug.
  */
-import {esc,loc,safeLink,safePdfURL,imageURL} from './utils.js?v=6.9.2';
-import {mergeReferenceRows,referenceFormsPaths,canonicalFormURL} from './services-reference.js?v=6.9.2';
+import {esc,loc,safeLink,safePdfURL,imageURL} from './utils.js?v=6.9.3';
+import {mergeReferenceRows,referenceFormsPaths,canonicalFormURL} from './services-reference.js?v=6.9.3';
 const tr=(l,m,e)=>l==='mr'?m:e;
 const setting=(v,key,l)=>String(v.site_settings?.[`${key}_${l}`]||v.site_settings?.[`${key}_${l==='mr'?'en':'mr'}`]||'');
 const metadata=(entry,key,l)=>String(entry.details?.[`${key}_${l}`]||entry.details?.[`${key}_${l==='mr'?'en':'mr'}`]||'');

@@ -1,6 +1,6 @@
 /** GramOS v3.0 — editable image/video gallery grouped like the reference. */
-import {esc,loc,imageURL,safeLink} from './utils.js?v=6.9.2';
-import {gallerySlots,missingMediaSlots} from './media-slots.js?v=6.9.2';
+import {esc,loc,imageURL,safeLink} from './utils.js?v=6.9.3';
+import {gallerySlots,missingMediaSlots} from './media-slots.js?v=6.9.3';
 const tr=(l,m,e)=>l==='mr'?m:e;
 const get=(v,k,l)=>String(v.site_settings?.[`${k}_${l}`]||v.site_settings?.[`${k}_${l==='mr'?'en':'mr'}`]||'');
 const cfg=(v,k,l,m,e)=>get(v,k,l)||tr(l,m,e);

@@ -3,11 +3,11 @@
  * villages columns, villages.site_settings, or published content_items.
  * No village content is hardcoded into this renderer.
  */
-import {esc,loc,icon,imageURL,safeLink,formatDate} from './utils.js?v=6.9.2';
-import {socialUrl,SOCIAL_FIELDS} from './social.js?v=6.9.2';
-import {MARATHI_SOCIAL_HEADING,platformLegalNotice} from './branding.js?v=6.9.2';
-import {officialSlots,leaderSlots,slideSlots,gallerySlots,missingMediaSlots,portraitPlaceholder,realMediaURL} from './media-slots.js?v=6.9.2';
-import {renderPageElements} from './page-elements.js?v=6.9.2';
+import {esc,loc,icon,imageURL,safeLink,formatDate} from './utils.js?v=6.9.3';
+import {socialUrl,SOCIAL_FIELDS} from './social.js?v=6.9.3';
+import {MARATHI_SOCIAL_HEADING,platformLegalNotice} from './branding.js?v=6.9.3';
+import {officialSlots,leaderSlots,slideSlots,gallerySlots,missingMediaSlots,portraitPlaceholder,realMediaURL} from './media-slots.js?v=6.9.3';
+import {renderPageElements} from './page-elements.js?v=6.9.3';
 const tr=(l,m,e)=>l==='mr'?m:e;
 const get=(v,k,l)=>String(v.site_settings?.[`${k}_${l}`]||v.site_settings?.[`${k}_${l==='mr'?'en':'mr'}`]||'');
 const linkFor=(v,key)=>`${v.slug==='demo'?'/demo':`/v/${encodeURIComponent(v.slug)}`}${key==='home'?'':`/${key}`}`;
