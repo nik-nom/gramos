@@ -8,7 +8,7 @@ import {renderProjectsPage} from './projects.js?v=6.9.3';
 import {renderSchemesPage,renderYojanaBeneficiariesPage} from './schemes.js?v=6.9.3';
 import {renderBeneficiariesPage} from './beneficiaries.js?v=6.9.3';
 import {renderNoticesPage} from './notices.js?v=6.9.3';
-import {renderShamvadiHomepage,homeHeader,homeFooter,homeBottomLogo,peopleCards} from './homepage.js?v=6.9.3';
+import {renderShamvadiHomepage,homeHeader,homeFooter,homeBottomLogo,peopleCards} from './homepage.js?v=6.9.8';
 // GramOS – Shamvadi-inspired blue Gram Panchayat public template.
 // Original code and styling; content and page sequence based on the public reference shamvadi.gpweb.in.
 import {esc,loc,icon,imageURL,safeLink,formatDate} from './utils.js?v=6.9.3';
@@ -77,7 +77,7 @@ export async function renderPublic(route,lang,role){
      const mapped=await call(api.from('village_domains').select('hostname').eq('village_id',v.id).eq('status','active').maybeSingle());
      if(mapped?.hostname){location.replace(`https://${mapped.hostname}${location.pathname}${location.search}${location.hash}`);return '<div class="initial-loading">Redirecting to village domain…</div>';}
    }
-   const items=preview?await itemsFor(v.id):await publishedItemsFor(v.id);const draft=preview?await getSiteDraft(v.id):null;const branded=withVillageDraft(v,draft?.changes);return villagePage(branded,items,lang,route.slice(2),preview,navLanguage);}
+   const [items,draft]=await Promise.all([preview?itemsFor(v.id):publishedItemsFor(v.id),preview?getSiteDraft(v.id):null]);const branded=withVillageDraft(v,draft?.changes);return villagePage(branded,items,lang,route.slice(2),preview,navLanguage);}
  // There is deliberately NO platform homepage or village directory.
  // A village is public only at its own /v/<slug> route (or a separately verified
  // hostname mapping when that feature is installed).

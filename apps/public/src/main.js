@@ -1,5 +1,5 @@
 import {browserRoute,cleanPath} from './domain-routing-v694.mjs';
-import {renderPublic} from './public.js?v=6.9.4';
+import {renderPublic} from './public.js?v=6.9.8';
 // Public deployment: the administrator bundle is excluded.
 const renderAdmin=async()=>'<main><h1>Not found</h1></main>';
 const submitAdminForm=async()=>false;
@@ -57,7 +57,7 @@ function enablePublicReadMore(){
  site.querySelectorAll('.sv-g-card').forEach(card=>{
    const body=card.querySelector('.sv-g-card-content');
    if(!body)return;
-   const full=(body.innerText||body.textContent||'').trim();
+   const full=(body.textContent||'').trim();
    if(full.length<=320)return;
    card.classList.add('sv-g-is-collapsed');
    attachButton(body,full);

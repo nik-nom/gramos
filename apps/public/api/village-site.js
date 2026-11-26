@@ -1,8 +1,10 @@
 import {readFile} from 'node:fs/promises';
-import {dbRows,publicConfig,publicVillage,publicArticle} from './lib/v694-seo-data.mjs';
+import {dbRows,publicConfig,publicArticle} from './lib/v694-seo-data.mjs';
 import {routeFor,cleanPath,slugOK,PAGES} from '../src/domain-routing-v694.mjs';
 import {resolveSEO} from '../src/seo.js';
 const htmlPath=new URL('../page-template.html',import.meta.url);
+let templatePromise;
+const getTemplate=()=>templatePromise||(templatePromise=readFile(htmlPath,'utf8').catch(e=>{templatePromise=null;throw e;}));
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function finish(res,code,body,type='text/html; charset=utf-8'){
  res.statusCode=code;res.setHeader('Content-Type',type);res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');if(code!==200)res.setHeader('X-Robots-Tag','noindex,nofollow');return res.end(body);
@@ -28,7 +30,7 @@ export default async function handler(req,res){
    const domains=await dbRows('village_domains','hostname,village_id,status,verified_at',{hostname:'eq.'+h,status:'eq.active'},opts);
    const d=domains.find(x=>x.hostname===h&&x.status==='active'&&x.verified_at);
    if(!d)return pageError(res,404);
-   village=(await dbRows('villages','id,slug,name_mr,name_en,tagline_mr,tagline_en,hero_image_url,logo_url,site_settings,status,updated_at',{id:'eq.'+d.village_id,status:'eq.published'},opts))[0];
+   village=(await dbRows('villages','*',{id:'eq.'+d.village_id,status:'eq.published'},opts))[0];
    if(!village||village.id!==d.village_id||!slugOK(village.slug))return pageError(res,404);bound=village.slug;
   }
   if(path==='/robots.txt')return finish(res,200,`User-agent: *\n${bound?'Allow: /\nDisallow: /api/\nSitemap: https://'+h+'/sitemap.xml':'Disallow: /\nAllow: /v/'}\n`,'text/plain; charset=utf-8');
@@ -39,7 +41,7 @@ export default async function handler(req,res){
    return finish(res,200,req.method==='HEAD'?'':`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`,'application/xml; charset=utf-8');
   }
   const r=routeFor(path,bound);if(!r)return pageError(res,404);
-  if(!village)village=await publicVillage(r.slug,opts);
+  if(!village)village=(await dbRows('villages','*',{slug:'eq.'+r.slug,status:'eq.published'},opts))[0];
   if(!village||village.slug!==r.slug||village.status!=='published')return pageError(res,404);
   let article=null;
   if(r.page==='news'&&r.article){article=await publicArticle(village.id,r.article,opts);if(!article)return pageError(res,404);}
@@ -51,9 +53,12 @@ export default async function handler(req,res){
    if(d){const q=new URLSearchParams(u.search);q.delete('gramosPath');q.delete('preview');res.setHeader('Location','https://'+d.hostname+cleanPath(path,r.slug)+(q.size?'?'+q:''));return finish(res,302,'');}
   }
   const m=resolveSEO(village,r.page,{origin:'https://'+h,domainRoot:!!bound,article});
-  let html=await readFile(htmlPath,'utf8');
+  let html=await getTemplate();
+  const verification=village.site_settings?.google_verification;
+  const googleTag=bound&&r.page==='home'&&verification?.hostname===h&&typeof verification.token==='string'&&/^[A-Za-z0-9_-]{1,256}$/.test(verification.token)?`<meta name="google-site-verification" content="${esc(verification.token)}">`:'';
   const browser=JSON.stringify({supabaseUrl:config.url,supabaseAnonKey:config.key}).replace(/</g,'\\u003c');
-  html=html.replace(/<title>[^<]*<\/title>/i,`<title>${esc(m.title)}</title>`).replace(/<meta name="robots" content="[^"]*"\s*\/?\s*>/i,`<meta name="robots" content="${esc(m.robots)}">`).replace(/<meta name="description" content="[^"]*"\s*\/?\s*>/i,`<meta name="description" content="${esc(m.description)}">`).replace('</head>',`<link rel="canonical" href="${esc(m.canonical)}">${bound?`<meta name="gramos-domain-village" content="${esc(bound)}">`:''}<script>window.GRAMOS_CONFIG=Object.assign({},window.GRAMOS_CONFIG||{},${browser});</script></head>`);
+  const seed=JSON.stringify(village).replace(/</g,'\\u003c');
+  html=html.replace(/<title>[^<]*<\/title>/i,()=>`<title>${esc(m.title)}</title>`).replace(/<meta name="robots" content="[^"]*"\s*\/?\s*>/i,()=>`<meta name="robots" content="${esc(m.robots)}">`).replace(/<meta name="description" content="[^"]*"\s*\/?\s*>/i,()=>`<meta name="description" content="${esc(m.description)}">`).replace('</head>',()=>`<link rel="canonical" href="${esc(m.canonical)}">${googleTag}${bound?`<meta name="gramos-domain-village" content="${esc(bound)}">`:''}<script>window.GRAMOS_CONFIG=Object.assign({},window.GRAMOS_CONFIG||{},${browser});window.GRAMOS_INITIAL_VILLAGE=${seed};</script></head>`);
   return finish(res,200,req.method==='HEAD'?'':html);
  }catch(error){console.error('Village route unavailable:',error.message);return pageError(res,503);}
 }
