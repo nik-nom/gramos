@@ -1,6 +1,6 @@
 import {api,accessRole,getSession} from './data.js?v=6.9.3';
-import {renderPublic} from './public.js?v=6.9.3';
-import {renderAdmin,submitAdminForm,adminAction,imageUpload,documentUpload,excelUpload} from './admin.js?v=6.9.6';
+import {renderPublic} from './public.js?v=6.9.8';
+import {renderAdmin,submitAdminForm,adminAction,imageUpload,documentUpload,excelUpload} from './admin.js?v=6.9.8';
 import {previewCSV} from './admin-experience.js?v=6.9.3';
 import {esc,notif} from './utils.js?v=6.9.3';
 
@@ -50,7 +50,7 @@ function enablePublicReadMore(){
  site.querySelectorAll('.sv-g-card').forEach(card=>{
    const body=card.querySelector('.sv-g-card-content');
    if(!body)return;
-   const full=(body.innerText||body.textContent||'').trim();
+   const full=(body.textContent||'').trim();
    if(full.length<=320)return;
    card.classList.add('sv-g-is-collapsed');
    attachButton(body,full);

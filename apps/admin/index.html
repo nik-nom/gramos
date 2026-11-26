@@ -12,9 +12,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Mukta:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/styles.css?v=6.9.3" />
+  <link rel="modulepreload" href="/src/main.js?v=6.9.9" />
+  <link rel="modulepreload" href="/src/public.js?v=6.9.8" />
+  <link rel="modulepreload" href="/src/admin.js?v=6.9.8" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 </head>
 <body>
   <div id="app"><div role="status" aria-live="polite" style="max-width:38rem;margin:12vh auto;padding:24px;font-family:system-ui,sans-serif"><h1>GramOS</h1><p id="gramos-boot-status" hidden></p></div></div>
+  <script>window.GRAMOS_CONFIG=window.GRAMOS_CONFIG||{"supabaseUrl":"https://nttnrfyidokwnkqrukdb.supabase.co","supabaseAnonKey":"sb_publishable_mKWHAQyZgz3h5_axtewF0A_PxLToIeG","turnstileSiteKey":""};</script>
   <script id="gramos-inline-bootstrap">
   (function(){
     'use strict';
@@ -22,11 +27,11 @@
     window.GRAMOS_BOOT_STAGE='Loading browser configuration';
     function fail(message,error){
       if(done)return;done=true;clearTimeout(timer);
-      console.error('GramOS v6.9.3 startup:',message,error||'');
+      console.error('GramOS v6.9.9 startup:',message,error||'');
       var box=document.createElement('section');box.style.cssText='max-width:38rem;margin:12vh auto;padding:24px;font-family:system-ui,sans-serif;overflow-wrap:anywhere';
       var title=document.createElement('h1');title.textContent='GramOS could not start';
       var detail=document.createElement('p');detail.textContent=message;
-      var stage=document.createElement('p');stage.textContent='Version 6.9.3 — '+window.GRAMOS_BOOT_STAGE;
+      var stage=document.createElement('p');stage.textContent='Version 6.9.9 — '+window.GRAMOS_BOOT_STAGE;
       var retry=document.createElement('button');retry.type='button';retry.textContent='Retry';retry.onclick=function(){location.reload();};
       box.append(title,detail,stage,retry);app.replaceChildren(box);
     }
@@ -43,8 +48,10 @@
     (isDemo?Promise.resolve():loadConfig()).then(function(){
       if(done)return;
       window.GRAMOS_BOOT_STAGE='Loading application modules';
+      var db=window.GRAMOS_CONFIG&&window.GRAMOS_CONFIG.supabaseUrl;if(db&&/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(db)){var pre=document.createElement('link');pre.rel='preconnect';pre.href=db;pre.crossOrigin='anonymous';document.head.appendChild(pre);}
+
       var status=document.getElementById('gramos-boot-status');if(status)status.textContent='Loading application modules…';
-      return import('/src/main.js?v=6.9.6').then(function(module){
+      return import('/src/main.js?v=6.9.9').then(function(module){
         if(!module.initialRender)throw new Error('Old application module served; verify the deployment');
         return module.initialRender;
       });

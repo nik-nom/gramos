@@ -160,7 +160,10 @@
       "includeFiles": "page-template.html"
     },
     "api/village-site.js": {
-      "includeFiles": "page-template.html"
+      "includeFiles": "{page-template.html,config.js}"
     }
-  }
+  },
+  "framework": null,
+  "buildCommand": null,
+  "outputDirectory": "."
 }

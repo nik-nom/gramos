@@ -4,14 +4,19 @@ const configURL=new URL('../../config.js',import.meta.url);
 export async function publicConfig(){
  let url=process.env.SUPABASE_URL||'';
  let key=process.env.SUPABASE_PUBLISHABLE_KEY||process.env.SUPABASE_ANON_KEY||'';
- // Development-only convenience: reuse the public, non-secret config.js settings.
- if((!url||!key)&&!process.env.VERCEL){
+ // A newly connected deployment may not have public environment variables yet.
+ // Use the checked-in PUBLIC configuration as a pair, never mix two projects.
+ if(!url&&!key){
   try{const source=await readFile(configURL,'utf8');
    url ||= source.match(/supabaseUrl:\s*['"]([^'"\s]+)['"]/)?.[1]||'';
    key ||= source.match(/supabaseAnonKey:\s*['"]([^'"\s]+)['"]/)?.[1]||'';
   }catch{}
  }
  if(!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(url)||!key||/PASTE_|REPLACE_|YOUR_/.test(key))throw new Error('Set SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY on the server.');
+ if(!/^sb_publishable_[\w-]+$/.test(key)){
+  let claims;try{claims=JSON.parse(Buffer.from(key.split('.')[1]||'','base64url').toString());}catch{}
+  if(!/^eyJ[\w.-]+$/.test(key)||claims?.role!=='anon')throw new Error('Expected a public Supabase key; never use a service-role key here.');
+ }
  return {url:url.replace(/\/$/,''),key};
 }
 export async function dbRows(table,fields,filters={}, {fetcher=fetch,config,max=10000}={}){
