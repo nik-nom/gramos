@@ -1,8 +1,8 @@
-import {api,accessRole,getSession} from './data.js?v=6.9.2';
-import {renderPublic} from './public.js?v=6.9.2';
-import {renderAdmin,submitAdminForm,adminAction,imageUpload,documentUpload,excelUpload} from './admin.js?v=6.9.2';
-import {previewCSV} from './admin-experience.js?v=6.9.2';
-import {esc,notif} from './utils.js?v=6.9.2';
+import {api,accessRole,getSession} from './data.js?v=6.9.3';
+import {renderPublic} from './public.js?v=6.9.3';
+import {renderAdmin,submitAdminForm,adminAction,imageUpload,documentUpload,excelUpload} from './admin.js?v=6.9.6';
+import {previewCSV} from './admin-experience.js?v=6.9.3';
+import {esc,notif} from './utils.js?v=6.9.3';
 
 const app=document.getElementById('app');
 const getLanguage=()=>{try{return localStorage.getItem('gramos-language')==='en'?'en':'mr';}catch{return 'mr';}};
@@ -99,11 +99,11 @@ function navigate(url){if(!url)return;history.pushState({},'',url);window.scroll
 async function render(){
  const run=++pendingRender;
  clearInterval(inboxTimer);inboxTimer=null;
- app.innerHTML='<div class="initial-loading" role="status" aria-live="polite">Loading…</div>';
+ app.innerHTML='<main class="container" aria-busy="true" style="padding:32px 16px"><h1>GramOS</h1></main>';
  try {
    currentRoute=getRoute();
    window.GRAMOS_BOOT_STAGE='Checking session';
-   const session=api&&currentRoute[0]!=='demo'?await startupDeadline(getSession(), 'Session check', 12000):null;
+   const session=api&&(currentRoute[0]==='admin'||new URLSearchParams(location.search).get('preview')==='1')?await startupDeadline(getSession(), 'Session check', 12000):null;
    if(run!==pendingRender)return;
    window.GRAMOS_BOOT_STAGE='Checking permissions';
    role=session?.user?await startupDeadline(accessRole(session.user.id), 'Permission check', 15000):{admin:false,ids:[]};
@@ -402,7 +402,7 @@ app.addEventListener('change',async e=>{
 
 app.addEventListener('submit',async e=>{
  const form=e.target;
- if(!['domainForm','grantSuperAdminForm','navbarBrandingForm','homeForm','footerForm','seoSettingsForm','contactSettingsForm','loginForm','recoverPasswordForm','setPasswordForm','settingsForm','aboutSettingsForm','serviceSettingsForm','projectSettingsForm','schemeSettingsForm','beneficiarySettingsForm','noticeSettingsForm','newsSettingsForm','gallerySettingsForm','createVillageForm','createStaffLoginForm','clientRecordForm','contentForm','staffAccessForm','visitorForm'].includes(form.id))return;
+ if(!['domainForm','googleVerifyForm','grantSuperAdminForm','navbarBrandingForm','homeForm','footerForm','seoSettingsForm','contactSettingsForm','loginForm','recoverPasswordForm','setPasswordForm','settingsForm','aboutSettingsForm','serviceSettingsForm','projectSettingsForm','schemeSettingsForm','beneficiarySettingsForm','noticeSettingsForm','newsSettingsForm','gallerySettingsForm','createVillageForm','createStaffLoginForm','clientRecordForm','contentForm','staffAccessForm','visitorForm'].includes(form.id))return;
  e.preventDefault();
  const button=e.submitter||form.querySelector('[type="submit"]');if(button?.disabled)return;
  form.dataset.saveMode=e.submitter?.dataset.saveMode||'publish';

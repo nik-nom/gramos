@@ -45,8 +45,15 @@ export default async function handler(req,res){
   const villages=await supabase(c,`/rest/v1/villages?id=eq.${villageId}&select=id,slug,status`);
   if(villages?.length!==1)return json(res,404,{error:'Village does not exist'});
   if(req.method==='GET')return json(res,200,{domains:await domains(c,villageId),vercelConnected:!!(process.env.VERCEL_API_TOKEN&&process.env.VERCEL_PUBLIC_PROJECT_ID),villageSlug:villages[0].slug});
-  const action=String(body.action||'');const hostname=validVillageDomain(body.hostname);
-  if(!hostname)return json(res,400,{error:'Enter a complete domain such as village.in (without https:// or /v/village)'});
+  const action=String(body.action||'');
+  if(action==='connection'){
+    const v=vercelConfig();
+    if(!v.token||!v.project)return json(res,409,{error:'Set VERCEL_API_TOKEN and VERCEL_PUBLIC_PROJECT_ID on the admin project, then redeploy.'});
+    try{const result=await vercel('GET',`/v9/projects/${encodeURIComponent(v.project)}`);if(!result?.id||result.id!==v.project)return json(res,409,{error:'Use the exact public project ID (prj_...) from Vercel Settings.'});return json(res,200,{message:'Vercel connection works: '+String(result.name||'public project').slice(0,80)});}catch{return json(res,409,{error:'Vercel connection failed. Check token expiry, account/team scope and public project ID.'});}
+  }
+  const hostname=validVillageDomain(body.hostname);
+  if(hostname&&[process.env.PUBLIC_SHARED_HOST,process.env.VERCEL_URL,process.env.VERCEL_PROJECT_PRODUCTION_URL].some(x=>String(x||'').toLowerCase()===hostname))return json(res,400,{error:'Reserved platform domain'});
+  if(!hostname)return json(res,400,{error:'Enter an available village.vercel.app or village.in (without https:// or a path)'});
   const record=await supabase(c,`/rest/v1/village_domains?hostname=eq.${encodeURIComponent(hostname)}&select=hostname,village_id,status`);
   if(record?.length&&record[0].village_id!==villageId)return json(res,409,{error:'That domain already belongs to another village'});
   if(action==='register'){
@@ -68,24 +75,25 @@ export default async function handler(req,res){
     const patch={hostname,village_id:villageId,status:'pending',verified_at:null,last_checked_at:null,vercel_details:{registration:mode,verification}};
     if(record?.length){await supabase(c,`/rest/v1/village_domains?hostname=eq.${encodeURIComponent(hostname)}&village_id=eq.${villageId}`,{method:'PATCH',body:patch});}
     else{await supabase(c,'/rest/v1/village_domains',{method:'POST',body:patch});}
-    return json(res,200,{message:mode==='manual'?'Saved as pending. Add this domain in Vercel → gramos-public → Domains, then configure the server token to verify it.':'Domain registered with Vercel. Configure DNS and click Verify & activate.',domains:await domains(c,villageId)});
+    return json(res,200,{message:mode==='manual'?'Saved as pending. Add this domain in Vercel → gramos-public → Domains, then configure the server token to verify it.':'Domain registered with Vercel. Click Verify & activate (custom domains may need DNS).',domains:await domains(c,villageId)});
   }
   if(action==='check'){
     if(!record?.length)return json(res,404,{error:'Add this domain first'});
     const v=vercelConfig();if(!v.token||!v.project)return json(res,409,{error:'To verify automatically, configure VERCEL_API_TOKEN and VERCEL_PUBLIC_PROJECT_ID in gramos-admin Vercel environment variables.'});
+    const managed=hostname.endsWith('.vercel.app');
     const [membership,dns]=await Promise.all([
       vercel('GET',`/v9/projects/${encodeURIComponent(v.project)}/domains/${encodeURIComponent(hostname)}`),
-      vercel('GET',`/v6/domains/${encodeURIComponent(hostname)}/config`)
+      managed?Promise.resolve(null):vercel('GET',`/v6/domains/${encodeURIComponent(hostname)}/config`)
     ]);
     // Fail closed: provider must positively confirm project ownership AND working DNS.
-    const owns=membership?.name===hostname&&membership?.verified===true;
-    const dnsReady=dns?.misconfigured===false;
+    const owns=membership?.name===hostname&&membership?.verified===true&&!membership.redirect&&!membership.gitBranch&&!membership.customEnvironmentId;
+    const dnsReady=managed?owns:dns?.misconfigured===false;
     const checked=new Date().toISOString();
-    await supabase(c,`/rest/v1/village_domains?hostname=eq.${encodeURIComponent(hostname)}&village_id=eq.${villageId}`,{method:'PATCH',body:{last_checked_at:checked,verified_at:owns&&dnsReady?checked:null,vercel_details:{dnsReady,vercelVerified:owns,verification:Array.isArray(membership?.verification)?membership.verification:[],recommendedCNAME:dns.recommendedCNAME||null,recommendedIPv4:dns.recommendedIPv4||null}}});
+    await supabase(c,`/rest/v1/village_domains?hostname=eq.${encodeURIComponent(hostname)}&village_id=eq.${villageId}`,{method:'PATCH',body:{last_checked_at:checked,verified_at:owns&&dnsReady?checked:null,vercel_details:{dnsReady,vercelVerified:owns,verification:Array.isArray(membership?.verification)?membership.verification:[],recommendedCNAME:dns?.recommendedCNAME||null,recommendedIPv4:dns?.recommendedIPv4||null}}});
     if(!owns||!dnsReady)return json(res,200,{active:false,message:'Domain is still pending. Follow Vercel DNS / ownership instructions, then retry.',dnsReady,ownershipVerified:owns,domains:await domains(c,villageId)});
     if(villages[0].status!=='published')return json(res,409,{error:'Publish the village before activating the domain'});
     await supabase(c,'/rest/v1/rpc/gramos_activate_verified_domain',{method:'POST',body:{p_village_id:villageId,p_hostname:hostname}});
-    return json(res,200,{active:true,message:'Verified and activated. Original /v/village path is preserved.',domains:await domains(c,villageId)});
+    return json(res,200,{active:true,message:`Verified and activated. Open https://${hostname}/`,domains:await domains(c,villageId)});
   }
   if(action==='remove'){
     if(!record?.length)return json(res,404,{error:'Domain not registered'});

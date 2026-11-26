@@ -1,0 +1,24 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+const root=new URL('../apps/public/',import.meta.url);
+globalThis.window={GRAMOS_CONFIG:{supabaseUrl:'https://test.supabase.co',supabaseAnonKey:'sb_publishable_mock'}};
+globalThis.location={origin:'https://example.test',pathname:'/v/test/services',search:''};
+globalThis.document={querySelector:()=>null};
+const calls=[];
+const village={id:'test-id',slug:'test',name_mr:'चाचणी गाव',status:'published',site_settings:{},home_sections:['gallery_notice','leaders_schemes']};
+globalThis.fetch=async (u,opts)=>{const url=new URL(u);calls.push(url);assert.equal(url.searchParams.get('status'),'eq.published');assert.equal(opts.headers.apikey,'sb_publishable_mock');assert(!opts.headers.Authorization);return new Response(JSON.stringify(url.pathname.endsWith('/villages')?[village]:[]),{status:200});};
+const {renderPublic}=await import(new URL('src/public.js',root));
+const html=await renderPublic(['v','test','services'],'mr',{},new AbortController().signal);
+assert(html.includes('चाचणी गाव'));assert.equal((html.match(/Download PDF<\/a>/g)||[]).length,36);assert.equal(calls.length,2);assert.equal(calls[1].searchParams.get('village_id'),'eq.test-id');
+assert(!calls.some(u=>u.pathname.includes('/auth/')));
+console.log('PASS: published services and 18 PDFs, anonymous REST, no auth requests');
+const crossBefore=calls.length;document.querySelector=()=>({getAttribute:()=> 'another-village'});
+assert((await renderPublic(['v','test'],'mr',{})).includes('404'));assert.equal(calls.length,crossBefore);document.querySelector=()=>null;
+console.log('PASS: verified custom-domain village binding preserved');
+globalThis.fetch=async()=>new Response('{}',{status:503});await assert.rejects(renderPublic(['v','test'],'mr',{}),/503/);
+globalThis.fetch=async(_u,{signal})=>new Promise((_,reject)=>{if(signal.aborted)reject(new Error('abort'));else signal.addEventListener('abort',()=>reject(new Error('abort')),{once:true});});
+const c=new AbortController();const waiting=renderPublic(['v','test'],'mr',{},c.signal);c.abort();await assert.rejects(waiting,/cancelled/);
+console.log('PASS: HTTP failure and cancelled request do not hang');
+for(const path of ['apps/public/page-template.html','apps/admin/index.html','apps/admin/admin-shell.html','index.html']){const text=await readFile(new URL('../'+path,import.meta.url),'utf8');assert(text.includes('gramos-inline-bootstrap'));assert(text.includes('/src/main.js?v='+(path==='index.html'?'6.9.3':path.startsWith('apps/admin/')?'6.9.6':'6.9.4')));assert(text.includes('Retry'));assert(!text.includes('>Loading…<'));}
+const main=await readFile(new URL('src/main.js',root),'utf8');assert(!main.includes('getSession'));assert(!main.includes('accessRole'));assert(main.includes('setTimeout(()=>request.abort(),28000)'));assert(main.includes('finally{clearTimeout(deadline);}'));assert(main.includes('retry-startup'));
+console.log('PASS: bootstrap and bounded rendering for both projects');

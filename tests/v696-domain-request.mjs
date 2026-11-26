@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {requestDomain} from '../apps/admin/src/domain-request.mjs';
+const base={villageId:'test',action:'list',origin:'https://gramos-admin-86id.vercel.app',token:'test-token'};
+const invoke=fetcher=>requestDomain({...base,fetcher});
+let result=await invoke(async(url,opts)=>{assert.equal(url,'https://gramos-admin-86id.vercel.app/api/domain-admin?village_id=test');assert.equal(opts.redirect,'error');assert.equal(opts.headers.Authorization,'Bearer test-token');return Response.json({domains:[],vercelConnected:true})});assert.deepEqual(result.domains,[]);
+await assert.rejects(invoke(async()=>new Response('<html>not found</html>',{status:404,headers:{'content-type':'text/html'}})),/non-JSON response \(HTTP 404\)/);
+await assert.rejects(invoke(async()=>new Response('bad',{status:200,headers:{'content-type':'application/json'}})),/invalid JSON/);
+await assert.rejects(invoke(async()=>Response.json({error:'Supabase server configuration is incomplete'},{status:503})),/Supabase server configuration is incomplete \(HTTP 503\)/);
+await assert.rejects(invoke(async()=>{throw new TypeError('Network failed')}),/Cannot reach/);
+await assert.rejects(requestDomain({...base,timeout:10,fetcher:async(url,{signal})=>new Promise((resolve,reject)=>signal.addEventListener('abort',()=>reject(Error('aborted'))))}),/timed out/);
+await assert.rejects(invoke(async()=>Response.json({})),/Unexpected Domain API response/);
+console.log('PASS: valid response, HTML 404, malformed JSON, 503 configuration, network error, timeout and invalid schema');
