@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import handler from '../apps/public/api/village-site.js';
+const hostname='ramnagar-gp.vercel.app';
+const village={id:'11111111-1111-4111-8111-111111111111',slug:'ramngra',status:'published',name_mr:'रामनगर'};
+const domain={hostname,village_id:village.id,status:'active',verified_at:'2026-11-27T09:49:16Z'};
+process.env.SUPABASE_URL='https://mock.supabase.co';process.env.SUPABASE_PUBLISHABLE_KEY='sb_publishable_mock';
+process.env.VERCEL_PROJECT_PRODUCTION_URL=hostname;
+let active=true,published=true;
+globalThis.fetch=async input=>{const u=new URL(input),p=u.searchParams;let rows=[];
+ if(u.pathname.endsWith('/village_domains')&&active&&(p.get('hostname')==='eq.'+hostname||p.get('village_id')==='eq.'+village.id))rows=[domain];
+ if(u.pathname.endsWith('/villages')&&published&&(p.get('id')==='eq.'+village.id||p.get('slug')==='eq.'+village.slug))rows=[village];
+ return new Response(JSON.stringify(rows));};
+async function request(host,path='home'){const res={headers:{},setHeader(k,v){this.headers[k]=v},end(body){this.body=body}};await handler({method:'GET',headers:{host},url:'/',query:{gramosPath:path}},res);return res;}
+let r=await request(hostname);assert.equal(r.statusCode,200);assert.match(r.body,/name="gramos-domain-village" content="ramngra"/);assert.match(r.body,/href="https:\/\/ramnagar-gp\.vercel\.app\/"/);
+assert.equal((await request(hostname,'about')).statusCode,200);
+assert.equal((await request(hostname,'v/other')).statusCode,404);
+assert.equal((await request(hostname,'sitemap.xml')).statusCode,200);
+assert.match((await request(hostname,'robots.txt')).body,/Allow: \//);
+r=await request('gramos-public.vercel.app','v/ramngra');assert.equal(r.statusCode,302);assert.equal(r.headers.Location,'https://'+hostname+'/');
+process.env.PUBLIC_SHARED_HOST=hostname;process.env.VERCEL_URL=hostname;assert.equal((await request(hostname)).statusCode,200);assert.equal((await request(hostname,'v/other')).statusCode,404);
+delete process.env.PUBLIC_SHARED_HOST;delete process.env.VERCEL_URL;
+published=false;assert.equal((await request(hostname)).statusCode,404);published=true;active=false;assert.equal((await request(hostname)).statusCode,404);assert.equal((await request(hostname,'v/ramngra')).statusCode,404);
+assert.equal((await request('unknown.vercel.app','v/ramngra')).statusCode,404);
+assert.equal((await request('gramos-public.vercel.app','v/ramngra')).statusCode,200);
+console.log('PASS: active village takes precedence over Vercel production/preview aliases; published-only, cross-village isolation, sitemap, robots, canonical redirects.');

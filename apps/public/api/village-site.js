@@ -10,7 +10,9 @@ function finish(res,code,body,type='text/html; charset=utf-8'){
  res.statusCode=code;res.setHeader('Content-Type',type);res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');if(code!==200)res.setHeader('X-Robots-Tag','noindex,nofollow');return res.end(body);
 }
 function hostOf(req){const h=String(req.headers?.host||'').toLowerCase();return /^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/.test(h)&&!h.includes('..')&&h.length<=253?h:'';}
-function shared(h){return ['gramos-public.vercel.app',process.env.PUBLIC_SHARED_HOST,process.env.VERCEL_URL,process.env.VERCEL_BRANCH_URL,process.env.VERCEL_PROJECT_PRODUCTION_URL].filter(Boolean).map(x=>x.toLowerCase()).includes(h);}
+// A Vercel production URL can be a village's own active domain, not a shared host.
+const defaultSharedHost='gramos-public.vercel.app';
+function shared(h){return [defaultSharedHost,process.env.PUBLIC_SHARED_HOST,process.env.VERCEL_URL,process.env.VERCEL_BRANCH_URL].filter(Boolean).map(x=>x.trim().toLowerCase()).includes(h);}
 function pageError(res,code){return finish(res,code,`<!doctype html><html lang="mr"><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><title>${code}</title><main style="font:18px system-ui;max-width:700px;margin:12vh auto;padding:24px"><h1>${code===404?'ग्रामपंचायत संकेतस्थळ उपलब्ध नाही':'संकेतस्थळ तात्पुरते उपलब्ध नाही'}</h1><p>${code===404?'योग्य गावाचा प्रकाशित पत्ता वापरा.':'कृपया पुन्हा प्रयत्न करा.'}</p></main></html>`);}
 export default async function handler(req,res){
  if(!['GET','HEAD'].includes(req.method))return finish(res,405,'Method not allowed','text/plain');
@@ -26,12 +28,14 @@ export default async function handler(req,res){
   if(!/^(sb_publishable_[\w-]+|eyJ[\w.-]+)$/.test(config.key))throw Error('Invalid public key');
   if(config.key.startsWith('eyJ')){const payload=JSON.parse(Buffer.from(config.key.split('.')[1],'base64url').toString());if(payload.role!=='anon')throw Error('Expected anon key');}
   let bound=null, village=null;
-  if(!shared(h)){
+  // Except for the permanently reserved default host, consult the verified DB binding first.
+  if(h!==defaultSharedHost){
    const domains=await dbRows('village_domains','hostname,village_id,status,verified_at',{hostname:'eq.'+h,status:'eq.active'},opts);
    const d=domains.find(x=>x.hostname===h&&x.status==='active'&&x.verified_at);
-   if(!d)return pageError(res,404);
-   village=(await dbRows('villages','*',{id:'eq.'+d.village_id,status:'eq.published'},opts))[0];
-   if(!village||village.id!==d.village_id||!slugOK(village.slug))return pageError(res,404);bound=village.slug;
+   if(d){
+    village=(await dbRows('villages','*',{id:'eq.'+d.village_id,status:'eq.published'},opts))[0];
+    if(!village||village.id!==d.village_id||village.status!=='published'||!slugOK(village.slug))return pageError(res,404);bound=village.slug;
+   }else if(!shared(h))return pageError(res,404);
   }
   if(path==='/robots.txt')return finish(res,200,`User-agent: *\n${bound?'Allow: /\nDisallow: /api/\nSitemap: https://'+h+'/sitemap.xml':'Disallow: /\nAllow: /v/'}\n`,'text/plain; charset=utf-8');
   if(path==='/sitemap.xml'){
@@ -49,7 +53,7 @@ export default async function handler(req,res){
   if(bound&&path.startsWith('/v/')){const q=new URLSearchParams(u.search);q.delete('gramosPath');q.delete('preview');res.setHeader('Location',cleanPath(path,bound)+(q.size?'?'+q:''));return finish(res,302,'');}
   if(!bound){
    const domains=await dbRows('village_domains','hostname,village_id,status,verified_at',{village_id:'eq.'+village.id,status:'eq.active'},opts).catch(()=>[]);
-   const d=domains.find(x=>x.village_id===village.id&&x.status==='active'&&x.verified_at&&typeof x.hostname==='string'&&/^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/.test(x.hostname)&&x.hostname.includes('.')&&!x.hostname.includes('..')&&!shared(x.hostname));
+   const d=domains.find(x=>x.village_id===village.id&&x.status==='active'&&x.verified_at&&typeof x.hostname==='string'&&/^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/.test(x.hostname)&&x.hostname.includes('.')&&!x.hostname.includes('..')&&x.hostname!==defaultSharedHost&&x.hostname!==h);
    if(d){const q=new URLSearchParams(u.search);q.delete('gramosPath');q.delete('preview');res.setHeader('Location','https://'+d.hostname+cleanPath(path,r.slug)+(q.size?'?'+q:''));return finish(res,302,'');}
   }
   const m=resolveSEO(village,r.page,{origin:'https://'+h,domainRoot:!!bound,article});
