@@ -1,5 +1,5 @@
 import {browserRoute,cleanPath} from './domain-routing-v694.mjs';
-import {renderPublic} from './public.js?v=6.9.8';
+import {renderPublic} from './public.js?v=6.10.0';
 // Public deployment: the administrator bundle is excluded.
 const renderAdmin=async()=>'<main><h1>Not found</h1></main>';
 const submitAdminForm=async()=>false;

@@ -14,7 +14,7 @@ import {renderShamvadiHomepage,homeHeader,homeFooter,homeBottomLogo,peopleCards}
 import {esc,loc,icon,imageURL,safeLink,formatDate} from './utils.js?v=6.9.3';
 import {socialUrl} from './social.js?v=6.9.3';
 import {renderPageElements} from './page-elements.js?v=6.9.3';
-import {villageBySlug,publishedItemsFor,configured} from './public-read.js?v=6.9.8';
+import {villageBySlug,publishedItemsFor,configured} from './public-read.js?v=6.10.0';
 import {getDemo} from './demo.js?v=6.9.3';
 
 const names={home:['मुखपृष्ठ','Home'],about:['ग्रामपंचायतीबद्दल','About Gram Panchayat'],gallery:['फोटो गॅलरी','Photo Gallery'],services:['लोकसेवा','Citizen Services'],news:['बातम्या','News'],notices:['सूचना फलक','Notice Board'],schemes:['शासकीय योजना','Government Schemes'],beneficiaries:['लाभार्थी यादी','Beneficiary Lists'],projects:['विकासकामे','Development Works'],staff:['पदाधिकारी व कर्मचारी','Office Bearers'],leaders:['माननीय पदाधिकारी','Leadership'],contact:['संपर्क','Contact'],pages:['महत्वाची पाने','Important Pages'],facilities:['ग्राम सुविधा','Village Facilities']};
@@ -74,7 +74,7 @@ export async function renderPublic(route,lang,role,signal){
    if(domainSlug&&domainSlug!==route[1])return '<main class="gp-error"><h1>404 — Not found</h1></main>';
    const v=await villageBySlug(route[1],signal);
    if(!v||v.status!=='published')return '<main class="gp-error"><h1>संकेतस्थळ उपलब्ध नाही</h1><p>हे गाव अद्याप प्रकाशित झालेले नाही किंवा पत्ता चुकीचा आहे.</p></main>';
-   const items=await publishedItemsFor(v.id,signal);
+   const items=await publishedItemsFor(v.id,signal,route[2]||'home');
    return villagePage(v,items,lang,route.slice(2),false,navLanguage);}
 
  // There is deliberately NO platform homepage or village directory.

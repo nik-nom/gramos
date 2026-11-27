@@ -19,19 +19,29 @@ export async function publicRows(table,filters,signal){
  }catch(error){if(controller.signal.aborted)throw new Error('Website data request timed out or was cancelled.');throw error;}
  finally{clearTimeout(timer);signal?.removeEventListener('abort',abort);}
 }
+const pageKinds=Object.freeze({
+ home:['banners','gallery','notices','leaders','officials','services','videos','news','projects','metrics','schemes','facilities'],
+ about:['about_blocks','about_facilities','about_facts','about_sections','committee_groups','committees','duties','facilities','officials'],
+ services:['services','service_steps','service_forms','service_links'], schemes:['schemes'], beneficiaries:['beneficiary_lists','schemes'],
+ projects:['projects'], notices:['notices'], news:['news'], gallery:['gallery','videos'], contact:[], staff:['officials'], leaders:['leaders'], facilities:['facilities'], pages:['pages']
+});
+export function contentKindsFor(page){return Object.hasOwn(pageKinds,page)?[...pageKinds[page],'page_elements']:null;}
+let initialPage=window.GRAMOS_INITIAL_PAGE||'home';
+try{delete window.GRAMOS_INITIAL_PAGE;}catch{}
 let initialVillage=window.GRAMOS_INITIAL_VILLAGE;
 try{delete window.GRAMOS_INITIAL_VILLAGE;}catch{}
 if(!initialVillage||initialVillage.status!=='published'||!(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).test(initialVillage.slug)||!(/^[a-f0-9-]{36}$/i).test(initialVillage.id))initialVillage=null;
 // Start loading content while the rest of the application modules are downloading.
-let initialContent=initialVillage?{id:initialVillage.id,promise:fetchPublishedItems(initialVillage.id).then(rows=>({rows}),error=>({error}))}:null;
+let initialContent=initialVillage?{id:initialVillage.id,page:initialPage,promise:fetchPublishedItems(initialVillage.id,undefined,initialPage).then(rows=>({rows}),error=>({error}))}:null;
 export async function villageBySlug(slug,signal){if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))return null;if(signal?.aborted)throw new Error('Website data request cancelled.');const seed=initialVillage;initialVillage=null;if(seed?.slug===slug)return seed;initialContent=null;return (await publicRows('villages',{slug:'eq.'+slug,limit:'1'},signal))[0]||null;}
-async function fetchPublishedItems(id,signal){
- const rows=[];for(let offset=0;offset<10000;offset+=1000){const batch=await publicRows('content_items',{village_id:'eq.'+id,order:'sort_order.asc,created_at.desc,id.asc',limit:'1000',offset:String(offset)},signal);rows.push(...batch);if(batch.length<1000)return rows.filter(x=>!x.deleted_at);}
+async function fetchPublishedItems(id,signal,page){
+ const kinds=contentKindsFor(page);const scope=kinds?{kind:`in.(${kinds.join(',')})`}:{};
+ const rows=[];for(let offset=0;offset<10000;offset+=1000){const batch=await publicRows('content_items',{village_id:'eq.'+id,...scope,order:'sort_order.asc,created_at.desc,id.asc',limit:'1000',offset:String(offset)},signal);rows.push(...batch);if(batch.length<1000)return rows.filter(x=>!x.deleted_at);}
  throw new Error('Website has too many content records.');
 }
 
-export async function publishedItemsFor(id,signal){
+export async function publishedItemsFor(id,signal,page='home'){
  const warm=initialContent;initialContent=null;
- if(warm?.id===id){const result=await warm.promise;if(signal?.aborted)throw new Error('Website data request cancelled.');if(result.error)throw result.error;return result.rows;}
- return fetchPublishedItems(id,signal);
+ if(warm?.id===id&&warm.page===page){const result=await warm.promise;if(signal?.aborted)throw new Error('Website data request cancelled.');if(result.error)throw result.error;return result.rows;}
+ return fetchPublishedItems(id,signal,page);
 }

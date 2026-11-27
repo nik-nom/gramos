@@ -1,6 +1,6 @@
 import {api,accessRole,getSession} from './data.js?v=6.9.3';
 import {renderPublic} from './public.js?v=6.9.8';
-import {renderAdmin,submitAdminForm,adminAction,imageUpload,documentUpload,excelUpload} from './admin.js?v=6.9.8';
+import {renderAdmin,submitAdminForm,adminAction,imageUpload,documentUpload,excelUpload} from './admin.js?v=6.10.0';
 import {previewCSV} from './admin-experience.js?v=6.9.3';
 import {esc,notif} from './utils.js?v=6.9.3';
 
