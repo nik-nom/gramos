@@ -3,15 +3,15 @@ import {validVillageDomain} from '../src/domain-routes.mjs';
 const uuid=x=>typeof x==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(x);
 function json(res,code,payload){res.statusCode=code;res.setHeader('Cache-Control','no-store');res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('X-Content-Type-Options','nosniff');return res.end(JSON.stringify(payload));}
 const config=()=>{
- const url=process.env.SUPABASE_URL?.replace(/\/$/,'');
- const publicKey=process.env.SUPABASE_PUBLISHABLE_KEY||process.env.SUPABASE_ANON_KEY;
- const secret=process.env.SUPABASE_SERVICE_ROLE_KEY;
+ const url=process.env.SUPABASE_URL?.trim().replace(/\/$/,'');
+ const publicKey=(process.env.SUPABASE_PUBLISHABLE_KEY||process.env.SUPABASE_ANON_KEY||'').trim();
+ const secret=(process.env.SUPABASE_SERVICE_ROLE_KEY||'').trim();
  if(!url||!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(url)||!publicKey||!secret)throw new Error('Supabase server configuration is incomplete');
  return {url,publicKey,secret};
 };
 async function supabase(c,path,{method='GET',body,auth=false}={}){
  const key=auth?c.publicKey:c.secret;
- const r=await fetch(c.url+path,{method,headers:{apikey:key,Authorization:`Bearer ${key}`,'Content-Type':'application/json',Prefer:'return=representation'},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(9000)});
+ const r=await fetch(c.url+path,{method,headers:{apikey:key,...(key.startsWith('sb_')?{}:{Authorization:`Bearer ${key}`}), 'Content-Type':'application/json',Prefer:'return=representation'},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(9000)});
  if(!r.ok){const b=await r.text();throw new Error(`Database operation failed (${r.status}): ${b.slice(0,150)}`);}
  const txt=await r.text();return txt?JSON.parse(txt):null;
 }
@@ -24,8 +24,8 @@ async function authenticate(req,c){
  const admins=await supabase(c,`/rest/v1/platform_admins?user_id=eq.${user.id}&select=user_id`);
  return Array.isArray(admins)&&admins.length?user:null;
 }
-function vercelConfig(){const token=process.env.VERCEL_API_TOKEN, project=process.env.VERCEL_PUBLIC_PROJECT_ID;
- return {token,project,teamId:process.env.VERCEL_TEAM_ID||''};}
+function vercelConfig(){const token=process.env.VERCEL_API_TOKEN?.trim(), project=process.env.VERCEL_PUBLIC_PROJECT_ID?.trim();
+ return {token,project,teamId:process.env.VERCEL_TEAM_ID?.trim()||''};}
 async function vercel(verb,path,body){const v=vercelConfig();if(!v.token||!v.project)throw new Error('Set VERCEL_API_TOKEN and VERCEL_PUBLIC_PROJECT_ID on the admin Vercel project');
  const u=new URL('https://api.vercel.com'+path);if(v.teamId)u.searchParams.set('teamId',v.teamId);
  const r=await fetch(u,{method:verb,headers:{Authorization:`Bearer ${v.token}`,Accept:'application/json','Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(10000)});
@@ -44,7 +44,7 @@ export default async function handler(req,res){
  try{
   const villages=await supabase(c,`/rest/v1/villages?id=eq.${villageId}&select=id,slug,status`);
   if(villages?.length!==1)return json(res,404,{error:'Village does not exist'});
-  if(req.method==='GET')return json(res,200,{domains:await domains(c,villageId),vercelConnected:!!(process.env.VERCEL_API_TOKEN&&process.env.VERCEL_PUBLIC_PROJECT_ID),villageSlug:villages[0].slug});
+  if(req.method==='GET')return json(res,200,{domains:await domains(c,villageId),vercelConnected:!!(process.env.VERCEL_API_TOKEN&&process.env.VERCEL_PUBLIC_PROJECT_ID),villageSlug:villages[0].slug,publicOrigin: /^([a-z0-9-]+\.)+[a-z0-9-]+$/.test(process.env.PUBLIC_SHARED_HOST||'')?'https://'+process.env.PUBLIC_SHARED_HOST:'https://gramos-public.vercel.app'});
   const action=String(body.action||'');
   if(action==='connection'){
     const v=vercelConfig();
@@ -53,13 +53,13 @@ export default async function handler(req,res){
   }
   const hostname=validVillageDomain(body.hostname);
   if(hostname&&[process.env.PUBLIC_SHARED_HOST,process.env.VERCEL_URL,process.env.VERCEL_PROJECT_PRODUCTION_URL].some(x=>String(x||'').toLowerCase()===hostname))return json(res,400,{error:'Reserved platform domain'});
-  if(!hostname)return json(res,400,{error:'Enter an available village.vercel.app or village.in (without https:// or a path)'});
+  if(!hostname)return json(res,400,{error:'Enter an available village.com, village.in or village.vercel.app (without a path)'});
   const record=await supabase(c,`/rest/v1/village_domains?hostname=eq.${encodeURIComponent(hostname)}&select=hostname,village_id,status`);
   if(record?.length&&record[0].village_id!==villageId)return json(res,409,{error:'That domain already belongs to another village'});
   if(action==='register'){
     // The village keeps its old active domain while a replacement is pending.
     if(record?.length&&record[0].status==='active')return json(res,200,{message:'Domain already active',domains:await domains(c,villageId)});
-    const v=vercelConfig();let mode='manual';let verification=[];
+    const v=vercelConfig();let mode='manual';let verification=[],dnsDetails={};
     if(v.token&&v.project){
       let result;
       try{result=await vercel('POST',`/v10/projects/${encodeURIComponent(v.project)}/domains`,{name:hostname});}
@@ -71,8 +71,12 @@ export default async function handler(req,res){
         if(result?.name!==hostname)throw registrationError;
       }
       mode='api';verification=Array.isArray(result.verification)?result.verification:[];
+      if(!hostname.endsWith('.vercel.app')){
+        dnsDetails={apexDomain:result.apexName||null,vercelVerified:result.verified===true};
+        try{const dns=await vercel('GET',`/v6/domains/${encodeURIComponent(hostname)}/config?projectIdOrName=${encodeURIComponent(v.project)}`);dnsDetails={...dnsDetails,dnsReady:dns.misconfigured===false,recommendedCNAME:dns.recommendedCNAME||null,recommendedIPv4:dns.recommendedIPv4||null};}catch{ /* Registration succeeded; the next check can retrieve DNS details. */ }
+      }
     }
-    const patch={hostname,village_id:villageId,status:'pending',verified_at:null,last_checked_at:null,vercel_details:{registration:mode,verification}};
+    const patch={hostname,village_id:villageId,status:'pending',verified_at:null,last_checked_at:null,vercel_details:{registration:mode,verification,...dnsDetails}};
     if(record?.length){await supabase(c,`/rest/v1/village_domains?hostname=eq.${encodeURIComponent(hostname)}&village_id=eq.${villageId}`,{method:'PATCH',body:patch});}
     else{await supabase(c,'/rest/v1/village_domains',{method:'POST',body:patch});}
     return json(res,200,{message:mode==='manual'?'Saved as pending. Add this domain in Vercel → gramos-public → Domains, then configure the server token to verify it.':'Domain registered with Vercel. Click Verify & activate (custom domains may need DNS).',domains:await domains(c,villageId)});
@@ -81,15 +85,18 @@ export default async function handler(req,res){
     if(!record?.length)return json(res,404,{error:'Add this domain first'});
     const v=vercelConfig();if(!v.token||!v.project)return json(res,409,{error:'To verify automatically, configure VERCEL_API_TOKEN and VERCEL_PUBLIC_PROJECT_ID in gramos-admin Vercel environment variables.'});
     const managed=hostname.endsWith('.vercel.app');
-    const [membership,dns]=await Promise.all([
+    let [membership,dns]=await Promise.all([
       vercel('GET',`/v9/projects/${encodeURIComponent(v.project)}/domains/${encodeURIComponent(hostname)}`),
-      managed?Promise.resolve(null):vercel('GET',`/v6/domains/${encodeURIComponent(hostname)}/config`)
+      managed?Promise.resolve(null):vercel('GET',`/v6/domains/${encodeURIComponent(hostname)}/config?projectIdOrName=${encodeURIComponent(v.project)}`)
     ]);
+    if(!managed && membership?.name===hostname && membership.verified===false){
+      try{await vercel('POST',`/v9/projects/${encodeURIComponent(v.project)}/domains/${encodeURIComponent(hostname)}/verify`);membership=await vercel('GET',`/v9/projects/${encodeURIComponent(v.project)}/domains/${encodeURIComponent(hostname)}`);}catch{ /* Keep pending and show the ownership challenge. */ }
+    }
     // Fail closed: provider must positively confirm project ownership AND working DNS.
     const owns=membership?.name===hostname&&membership?.verified===true&&!membership.redirect&&!membership.gitBranch&&!membership.customEnvironmentId;
     const dnsReady=managed?owns:dns?.misconfigured===false;
     const checked=new Date().toISOString();
-    await supabase(c,`/rest/v1/village_domains?hostname=eq.${encodeURIComponent(hostname)}&village_id=eq.${villageId}`,{method:'PATCH',body:{last_checked_at:checked,verified_at:owns&&dnsReady?checked:null,vercel_details:{dnsReady,vercelVerified:owns,verification:Array.isArray(membership?.verification)?membership.verification:[],recommendedCNAME:dns?.recommendedCNAME||null,recommendedIPv4:dns?.recommendedIPv4||null}}});
+    await supabase(c,`/rest/v1/village_domains?hostname=eq.${encodeURIComponent(hostname)}&village_id=eq.${villageId}`,{method:'PATCH',body:{last_checked_at:checked,verified_at:owns&&dnsReady?checked:null,vercel_details:{apexDomain:membership?.apexName||null,dnsReady,vercelVerified:owns,verification:Array.isArray(membership?.verification)?membership.verification:[],recommendedCNAME:dns?.recommendedCNAME||null,recommendedIPv4:dns?.recommendedIPv4||null}}});
     if(!owns||!dnsReady)return json(res,200,{active:false,message:'Domain is still pending. Follow Vercel DNS / ownership instructions, then retry.',dnsReady,ownershipVerified:owns,domains:await domains(c,villageId)});
     if(villages[0].status!=='published')return json(res,409,{error:'Publish the village before activating the domain'});
     await supabase(c,'/rest/v1/rpc/gramos_activate_verified_domain',{method:'POST',body:{p_village_id:villageId,p_hostname:hostname}});

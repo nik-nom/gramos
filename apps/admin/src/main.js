@@ -1,6 +1,6 @@
 import {api,accessRole,getSession} from './data.js?v=6.9.3';
-import {renderPublic} from './public.js?v=6.9.8';
-import {renderAdmin,submitAdminForm,adminAction,imageUpload,documentUpload,excelUpload} from './admin.js?v=6.10.0';
+const renderPublic=async(...args)=>(await import('./public.js?v=6.9.8')).renderPublic(...args);
+import {renderAdmin,submitAdminForm,adminAction,imageUpload,documentUpload,excelUpload} from './admin.js?v=6.10.4';
 import {previewCSV} from './admin-experience.js?v=6.9.3';
 import {esc,notif} from './utils.js?v=6.9.3';
 
@@ -404,6 +404,7 @@ app.addEventListener('submit',async e=>{
  const form=e.target;
  if(!['domainForm','googleVerifyForm','grantSuperAdminForm','navbarBrandingForm','homeForm','footerForm','seoSettingsForm','contactSettingsForm','loginForm','recoverPasswordForm','setPasswordForm','settingsForm','aboutSettingsForm','serviceSettingsForm','projectSettingsForm','schemeSettingsForm','beneficiarySettingsForm','noticeSettingsForm','newsSettingsForm','gallerySettingsForm','createVillageForm','createStaffLoginForm','clientRecordForm','contentForm','staffAccessForm','visitorForm'].includes(form.id))return;
  e.preventDefault();
+ if(form.querySelector('[data-uploading="true"]')){notif('Image upload is still in progress. Save after it finishes.',true);return;}
  const button=e.submitter||form.querySelector('[type="submit"]');if(button?.disabled)return;
  form.dataset.saveMode=e.submitter?.dataset.saveMode||'publish';
  const submitButtons=[...form.querySelectorAll('[type="submit"]')];submitButtons.forEach(x=>x.disabled=true);

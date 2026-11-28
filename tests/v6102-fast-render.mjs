@@ -25,5 +25,5 @@ const builder={select(...a){steps.push(['select',...a]);return this},eq(...a){st
 window.supabase={createClient:()=>({from(table){steps.push(['from',table]);return builder}})};
 const {countContentDrafts}=await import('../apps/admin/src/admin.js');
 assert.equal(await countContentDrafts(id),1501);assert.deepEqual(steps,[['from','content_items'],['select','id',{count:'exact',head:true}],['eq','village_id',id],['eq','status','draft'],['is','deleted_at',null]]);error={message:'denied'};await assert.rejects(countContentDrafts(id),/denied/);error=null;count=null;await assert.rejects(countContentDrafts(id),/unavailable/);
-for(const file of ['index.html','admin-shell.html']){const html=await readFile(new URL('../apps/admin/'+file,import.meta.url),'utf8');assert(!html.includes('modulepreload" href="/src/public.js'));assert(html.includes('/src/main.js?v=6.10.2'));}
+for(const file of ['index.html','admin-shell.html']){const html=await readFile(new URL('../apps/admin/'+file,import.meta.url),'utf8');assert(!html.includes('modulepreload" href="/src/public.js'));assert(html.includes('/src/main.js?v=6.10.4'));}
 console.log('PASS: 14 public routes rendered with mock data, selected renderer preload, early DB connection, no cached HTML, exact scoped admin count and error paths.');

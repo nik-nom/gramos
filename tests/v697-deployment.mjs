@@ -21,6 +21,6 @@ for(const file of ['index.html','admin-shell.html']){
  assert.match(browser.window.GRAMOS_CONFIG.supabaseAnonKey,/^sb_publishable_/);
  assert.equal(browser.window.GRAMOS_CONFIG.supabaseUrl,context.window.GRAMOS_CONFIG.supabaseUrl);
  assert(html.indexOf(setup)<html.indexOf('id="gramos-inline-bootstrap"'));
- assert(html.includes('Version 6.10.0'));assert(html.includes('/src/main.js?v=6.10.0'));
+ assert(html.includes('Version 6.10.4'));assert(html.includes('/src/main.js?v=6.10.4'));
 }
 console.log('PASS: deploy entrypoints, required API/static files, inline public configuration, cache version');
